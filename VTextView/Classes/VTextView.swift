@@ -7,31 +7,31 @@ public protocol VTextAttribute {
     var defaultAttribute: [NSAttributedString.Key: Any] { get }
 }
 
-open class VTextView: UITextView {
+open class VTextView: UITextView, UITextViewDelegate {
     
     private var internalTextStorage: VTextStorage? {
         return self.textStorage as? VTextStorage
     }
     
-    private var currentTypingAttribute: [NSAttributedString.Key: Any] = [:] {
+    private var currentTypingAttribute: [NSAttributedString.Key: Any] {
         didSet {
             self.typingAttributes = currentTypingAttribute
             self.internalTextStorage?.currentTypingAttribute = currentTypingAttribute
         }
     }
     
-    public required init(typingAttributes: VTextAttribute) {
+    public required init(typingStyle: VTextAttribute) {
         
         let textContainer = NSTextContainer(size: .zero)
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)
-
         let textStorage = VTextStorage.init()
         textStorage.addLayoutManager(layoutManager)
-        
+        textStorage.currentTypingAttribute = typingStyle.defaultAttribute
+        self.currentTypingAttribute = typingStyle.defaultAttribute
         super.init(frame: .zero, textContainer: textContainer)
+        super.delegate = self
         self.autocorrectionType = .no
-        self.typingAttributes = typingAttributes.defaultAttribute
     }
     
     public func setTypingAttribute(_ typingStyle: VTextAttribute) {
@@ -42,6 +42,10 @@ open class VTextView: UITextView {
     
     required public init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    
+    public func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
+       return true
     }
 }
 

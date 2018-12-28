@@ -25,7 +25,7 @@ class ViewController: UIViewController {
         }
     }
     
-    let textView = VTextView.init(typingAttributes: TypingScope.normal)
+    let textView = VTextView(typingStyle: TypingScope.normal)
     let controlView = TypingControlView(frame: .zero)
     
     init() {
@@ -61,14 +61,14 @@ class ViewController: UIViewController {
         
         self.view.addSubview(controlView)
         controlView.snp.makeConstraints({ make in
-            make.trailing.equalToSuperview().inset(15.0)
+            make.trailing.equalToSuperview().inset(10.0)
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0)
         })
         
         controlView.boldControlView.addTarget(self, action: #selector(didTapBold), for: .touchUpInside)
         controlView.dismissControlView.addTarget(self, action: #selector(didTapDismiss), for: .touchUpInside)
     }
-
+    
     @objc func didTapBold() {
         if controlView.boldControlView.isSelected {
             controlView.boldControlView.isSelected = false
@@ -93,7 +93,7 @@ class ViewController: UIViewController {
         })
         
         controlView.snp.remakeConstraints({ make in
-            make.trailing.equalToSuperview().inset(40.0)
+            make.trailing.equalToSuperview().inset(10.0)
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0 + keyboardSize.height)
         })
     }
@@ -107,11 +107,11 @@ class ViewController: UIViewController {
         })
         
         controlView.snp.remakeConstraints({ make in
-            make.trailing.equalToSuperview().inset(40.0)
+            make.trailing.equalToSuperview().inset(10.0)
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0)
         })
     }
-
+    
 }
 
 class TypingControlView: UIView {
@@ -120,9 +120,14 @@ class TypingControlView: UIView {
         let button = UIButton.init(type: UIButton.ButtonType.system)
         button.setTitle("Bold", for: .normal)
         button.setTitle("Bold", for: .selected)
-        button.setTitleColor(UIColor.lightGray, for: .normal)
+        button.setTitleColor(UIColor.white, for: .normal)
         button.setTitleColor(UIColor.white, for: .selected)
-        button.backgroundColor = .lightGray
+        button.setBackgroundImage(UIImage.backgroundImage(withColor: .gray), for: .normal)
+        button.setBackgroundImage(UIImage.backgroundImage(withColor: .blue), for: .selected)
+        button.backgroundColor = .clear
+        button.layer.cornerRadius = 10.0
+        button.clipsToBounds = true
+        button.contentEdgeInsets = .init(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
         return button
     }()
     
@@ -130,7 +135,11 @@ class TypingControlView: UIView {
         let button = UIButton.init(type: UIButton.ButtonType.system)
         button.setTitle("Dismiss", for: .normal)
         button.setTitleColor(UIColor.white, for: .normal)
-        button.backgroundColor = .red
+        button.setBackgroundImage(UIImage.backgroundImage(withColor: .red), for: .normal)
+        button.layer.cornerRadius = 10.0
+        button.clipsToBounds = true
+        button.backgroundColor = .clear
+        button.contentEdgeInsets = .init(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
         return button
     }()
     
@@ -156,7 +165,6 @@ class TypingControlView: UIView {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
 }
 
 extension UIView {
@@ -167,5 +175,24 @@ extension UIView {
             return self.safeAreaLayoutGuide.snp
         }
         return self.snp
+    }
+}
+
+extension UIImage {
+    
+    static func backgroundImage(withColor color: UIColor) -> UIImage? {
+        return self.backgroundImage(withColor: color, size: CGSize(width: 1, height: 1))
+    }
+    
+    static func backgroundImage(withColor color: UIColor, size: CGSize) -> UIImage? {
+        var rect: CGRect = .zero
+        rect.size = size
+        UIGraphicsBeginImageContext(rect.size)
+        let context = UIGraphicsGetCurrentContext()
+        context?.setFillColor(color.cgColor)
+        context?.fill(rect)
+        let image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        return image
     }
 }
