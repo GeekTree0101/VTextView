@@ -3,6 +3,8 @@ use_frameworks!
 target 'VTextView_Example' do
   pod 'VTextView', :path => '../'
   pod 'SnapKit'
+  pod 'RxCocoa'
+  pod 'RxSwift'
 
   target 'VTextView_Tests' do
     inherit! :search_paths
