@@ -8,7 +8,6 @@ class ViewController: UIViewController {
         
         case normal
         case bold
-        
     }
     
     let stylers: [VTextStyler] =
@@ -23,6 +22,7 @@ class ViewController: UIViewController {
     
     lazy var textView = VTextView(stylers: self.stylers,
                                   defaultKey: TypingScope.normal.rawValue)
+    
     let controlView = TypingControlView(frame: .zero)
     
     init() {
@@ -45,6 +45,8 @@ class ViewController: UIViewController {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(ViewController.keyboardWillHide),
                                                name: UIResponder.keyboardWillHideNotification, object: nil)
+        
+        self.textView.applyXML("<content><p>plain\n</p><b>bold</b></content>")
     }
     
     private func initLayout() {
@@ -77,8 +79,8 @@ class ViewController: UIViewController {
     }
     
     @objc func didTapDismiss() {
-        self.textView.resignFirstResponder()
-        print("DEBUG* \(self.textView.buildToXML())")
+        _ = self.textView.resignFirstResponder()
+        print("DEBUG* \(self.textView.buildToXML(packageTag: "content") ?? "" )")
     }
     
     @objc func keyboardWillShow(notification: Notification) {
