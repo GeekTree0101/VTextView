@@ -5,10 +5,10 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     enum TypingStatus {
         
-        case typing
-        case remove
-        case install
-        case none
+        case typing // Insert new single character as keyboard
+        case remove // Remove character as keyboard
+        case install // Directly set attributedString at storage
+        case none // unknown or default status
     }
     
     internal var status: TypingStatus = .none
