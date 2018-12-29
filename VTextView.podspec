@@ -3,7 +3,7 @@ Pod::Spec.new do |s|
   s.version          = '1.0.0'
   s.summary          = 'Light & Powerful UITextView for TextEditor'
 
-  s.description      = 'Light & Powerful UITextView powred by Vingle.inc'
+  s.description      = 'Light & Powerful UITextView, built at Vingle.inc'
 
   s.homepage         = 'https://github.com/Geektree0101/VTextView'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
