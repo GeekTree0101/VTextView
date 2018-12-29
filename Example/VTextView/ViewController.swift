@@ -4,28 +4,25 @@ import SnapKit
 
 class ViewController: UIViewController {
     
-    enum TypingScope: VTextAttribute {
+    enum TypingScope: String {
         
         case normal
         case bold
         
-        var attributes: [NSAttributedString.Key : Any] {
-            switch self {
-            case .normal:
-                return [.font: UIFont.systemFont(ofSize: 15),
-                        .foregroundColor: UIColor.black]
-            case .bold:
-                return [.font: UIFont.systemFont(ofSize: 15, weight: .bold),
-                        .foregroundColor: UIColor.black]
-            }
-        }
-        
-        var defaultAttribute: [NSAttributedString.Key: Any] {
-            return TypingScope.normal.attributes
-        }
     }
     
-    let textView = VTextView(typingStyle: TypingScope.normal)
+    let stylers: [VTextStyler] =
+        [.init(TypingScope.normal.rawValue,
+               attributes: [.font: UIFont.systemFont(ofSize: 15),
+                            .foregroundColor: UIColor.black],
+               xmlTag: "p"),
+         .init(TypingScope.bold.rawValue,
+               attributes: [.font: UIFont.systemFont(ofSize: 15, weight: .bold),
+                            .foregroundColor: UIColor.black],
+               xmlTag: "b")]
+    
+    lazy var textView = VTextView(stylers: self.stylers,
+                                  defaultKey: TypingScope.normal.rawValue)
     let controlView = TypingControlView(frame: .zero)
     
     init() {
@@ -72,15 +69,16 @@ class ViewController: UIViewController {
     @objc func didTapBold() {
         if controlView.boldControlView.isSelected {
             controlView.boldControlView.isSelected = false
-            self.textView.setTypingAttribute(TypingScope.normal)
+            self.textView.setTypingAttribute(key: TypingScope.normal.rawValue)
         } else {
             controlView.boldControlView.isSelected = true
-            self.textView.setTypingAttribute(TypingScope.bold)
+            self.textView.setTypingAttribute(key: TypingScope.bold.rawValue)
         }
     }
     
     @objc func didTapDismiss() {
         self.textView.resignFirstResponder()
+        print("DEBUG* \(self.textView.buildToXML())")
     }
     
     @objc func keyboardWillShow(notification: Notification) {
@@ -111,7 +109,6 @@ class ViewController: UIViewController {
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0)
         })
     }
-    
 }
 
 class TypingControlView: UIView {
