@@ -4,12 +4,14 @@ import SnapKit
 
 class ViewController: UIViewController {
     
+    // Convenience VTextStyler key enum
     enum TypingScope: String {
         
         case normal
         case bold
     }
     
+    // DEFINE Stylers
     let stylers: [VTextStyler] =
         [.init(TypingScope.normal.rawValue,
                attributes: [.font: UIFont.systemFont(ofSize: 15),
@@ -20,6 +22,7 @@ class ViewController: UIViewController {
                             .foregroundColor: UIColor.black],
                xmlTag: "b")]
     
+    // Create VTextView
     lazy var textView = VTextView(stylers: self.stylers,
                                   defaultKey: TypingScope.normal.rawValue)
     
@@ -39,18 +42,13 @@ class ViewController: UIViewController {
         self.view.backgroundColor = .white
         
         self.initLayout()
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(ViewController.keyboardWillShow),
-                                               name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(ViewController.keyboardWillHide),
-                                               name: UIResponder.keyboardWillHideNotification, object: nil)
+        self.initEvent()
         
+        // test
         self.textView.applyXML("<content><p>plain\n</p><b>bold</b></content>")
     }
     
     private func initLayout() {
-        
         self.view.addSubview(textView)
         textView.snp.makeConstraints({ make in
             make.top.equalTo(self.view.safeArea.top)
@@ -63,10 +61,24 @@ class ViewController: UIViewController {
             make.trailing.equalToSuperview().inset(10.0)
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0)
         })
+    }
+    
+    private func initEvent() {
+        // keyboard
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(ViewController.keyboardWillShow),
+                                               name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(ViewController.keyboardWillHide),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
         
+        // control button
         controlView.boldControlView.addTarget(self, action: #selector(didTapBold), for: .touchUpInside)
         controlView.dismissControlView.addTarget(self, action: #selector(didTapDismiss), for: .touchUpInside)
     }
+}
+
+extension ViewController {
     
     @objc func didTapBold() {
         if controlView.boldControlView.isSelected {
@@ -110,88 +122,5 @@ class ViewController: UIViewController {
             make.trailing.equalToSuperview().inset(10.0)
             make.bottom.equalTo(self.view.safeArea.bottom).inset(40.0)
         })
-    }
-}
-
-class TypingControlView: UIView {
-    
-    lazy var boldControlView: UIButton = {
-        let button = UIButton.init(type: UIButton.ButtonType.system)
-        button.setTitle("Bold", for: .normal)
-        button.setTitle("Bold", for: .selected)
-        button.setTitleColor(UIColor.white, for: .normal)
-        button.setTitleColor(UIColor.white, for: .selected)
-        button.setBackgroundImage(UIImage.backgroundImage(withColor: .gray), for: .normal)
-        button.setBackgroundImage(UIImage.backgroundImage(withColor: .blue), for: .selected)
-        button.backgroundColor = .clear
-        button.layer.cornerRadius = 10.0
-        button.clipsToBounds = true
-        button.contentEdgeInsets = .init(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
-        return button
-    }()
-    
-    lazy var dismissControlView: UIButton = {
-        let button = UIButton.init(type: UIButton.ButtonType.system)
-        button.setTitle("Dismiss", for: .normal)
-        button.setTitleColor(UIColor.white, for: .normal)
-        button.setBackgroundImage(UIImage.backgroundImage(withColor: .red), for: .normal)
-        button.layer.cornerRadius = 10.0
-        button.clipsToBounds = true
-        button.backgroundColor = .clear
-        button.contentEdgeInsets = .init(top: 10.0, left: 10.0, bottom: 10.0, right: 10.0)
-        return button
-    }()
-    
-    lazy var controlStackView: UIStackView = {
-        let view = UIStackView.init(arrangedSubviews: [boldControlView, dismissControlView])
-        view.spacing = 20.0
-        view.axis = .horizontal
-        view.backgroundColor = .clear
-        return view
-    }()
-    
-    override init(frame: CGRect) {
-        super.init(frame: .zero)
-        self.backgroundColor = .clear
-        self.addSubview(controlStackView)
-        
-        self.layer.cornerRadius = 20.0
-        controlStackView.snp.makeConstraints({ make in
-            make.edges.equalToSuperview().inset(20.0)
-        })
-    }
-    
-    required init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-}
-
-extension UIView {
-    
-    var safeArea: ConstraintBasicAttributesDSL {
-        
-        if #available(iOS 11.0, *) {
-            return self.safeAreaLayoutGuide.snp
-        }
-        return self.snp
-    }
-}
-
-extension UIImage {
-    
-    static func backgroundImage(withColor color: UIColor) -> UIImage? {
-        return self.backgroundImage(withColor: color, size: CGSize(width: 1, height: 1))
-    }
-    
-    static func backgroundImage(withColor color: UIColor, size: CGSize) -> UIImage? {
-        var rect: CGRect = .zero
-        rect.size = size
-        UIGraphicsBeginImageContext(rect.size)
-        let context = UIGraphicsGetCurrentContext()
-        context?.setFillColor(color.cgColor)
-        context?.fill(rect)
-        let image = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-        return image
     }
 }

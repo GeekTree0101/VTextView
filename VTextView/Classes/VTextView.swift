@@ -18,7 +18,6 @@ open class VTextView: UITextView, UITextViewDelegate {
     private let defaultStyler: VTextStyler?
     
     public required init(stylers: [VTextStyler], defaultKey: String) {
-        
         let textContainer = NSTextContainer(size: .zero)
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)
@@ -75,4 +74,5 @@ open class VTextView: UITextView, UITextViewDelegate {
         self.internalTextStorage?.status = .none
         return super.resignFirstResponder()
     }
+    
 }

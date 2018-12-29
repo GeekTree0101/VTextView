@@ -107,7 +107,6 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
 extension VTextStorage {
     
     internal func parseToXML(packageTag: String?) -> String {
-        
         let range = NSRange.init(location: 0, length: self.internalAttributedString.length)
         var output: String = ""
         

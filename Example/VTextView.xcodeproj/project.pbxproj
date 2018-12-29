@@ -14,6 +14,9 @@
 		607FACE01AFB9204008FA782 /* LaunchScreen.xib in Resources */ = {isa = PBXBuildFile; fileRef = 607FACDE1AFB9204008FA782 /* LaunchScreen.xib */; };
 		607FACEC1AFB9204008FA782 /* Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACEB1AFB9204008FA782 /* Tests.swift */; };
 		8C88530D6495992C2210A8B0 /* Pods_VTextView_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 206F36BA9E2FFFDD569CC0FB /* Pods_VTextView_Tests.framework */; };
+		9B5720C721D748DD001940C2 /* TypingControlView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720C621D748DD001940C2 /* TypingControlView.swift */; };
+		9B5720C921D748FF001940C2 /* UIView+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720C821D748FF001940C2 /* UIView+extension.swift */; };
+		9B5720CB21D74926001940C2 /* UIImage+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720CA21D74926001940C2 /* UIImage+extension.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,6 +45,9 @@
 		607FACEB1AFB9204008FA782 /* Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tests.swift; sourceTree = "<group>"; };
 		64D3560DF79BEB2629D783CA /* Pods-VTextView_Tests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VTextView_Tests.debug.xcconfig"; path = "Pods/Target Support Files/Pods-VTextView_Tests/Pods-VTextView_Tests.debug.xcconfig"; sourceTree = "<group>"; };
 		8F553B6467E6400B138EB8D8 /* Pods_VTextView_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_VTextView_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		9B5720C621D748DD001940C2 /* TypingControlView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TypingControlView.swift; sourceTree = "<group>"; };
+		9B5720C821D748FF001940C2 /* UIView+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+extension.swift"; sourceTree = "<group>"; };
+		9B5720CA21D74926001940C2 /* UIImage+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIImage+extension.swift"; sourceTree = "<group>"; };
 		A7A6AF814D7807D13361812C /* VTextView.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = VTextView.podspec; path = ../VTextView.podspec; sourceTree = "<group>"; };
 		E2785F697092B7F8543B4077 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		EE82B84413330AF02F681B0C /* Pods-VTextView_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VTextView_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-VTextView_Tests/Pods-VTextView_Tests.release.xcconfig"; sourceTree = "<group>"; };
@@ -105,6 +111,9 @@
 				607FACDC1AFB9204008FA782 /* Images.xcassets */,
 				607FACDE1AFB9204008FA782 /* LaunchScreen.xib */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
+				9B5720C621D748DD001940C2 /* TypingControlView.swift */,
+				9B5720C821D748FF001940C2 /* UIView+extension.swift */,
+				9B5720CA21D74926001940C2 /* UIImage+extension.swift */,
 			);
 			name = "Example for VTextView";
 			path = VTextView;
@@ -360,7 +369,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9B5720CB21D74926001940C2 /* UIImage+extension.swift in Sources */,
+				9B5720C721D748DD001940C2 /* TypingControlView.swift in Sources */,
 				607FACD81AFB9204008FA782 /* ViewController.swift in Sources */,
+				9B5720C921D748FF001940C2 /* UIView+extension.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
