@@ -1,5 +1,7 @@
 import UIKit
 import Foundation
+import RxSwift
+import RxCocoa
 
 public struct VTextStyler {
     
@@ -7,7 +9,7 @@ public struct VTextStyler {
         .init(rawValue: "VTextStyler.key")
     
     public var key: String
-    public var isEnable: Bool = false
+    public var isEnableRelay = BehaviorRelay<Bool>(value: false)
     public var attributes: [NSAttributedString.Key: Any]
     public var xmlTag: String
     

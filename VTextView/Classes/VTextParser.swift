@@ -32,7 +32,9 @@ internal class VTextXMLParser: NSObject, XMLParserDelegate {
     
     func parser(_ parser: XMLParser, foundCharacters string: String) {
         guard let styler = self.currentStyler, !string.isEmpty else { return }
-        let attrText = NSAttributedString(string: string, attributes: styler.typingAttributes)
+        let filteredString = string.replacingOccurrences(of: "\\n", with: "\n")
+        let attrText = NSAttributedString(string: filteredString,
+                                          attributes: styler.typingAttributes)
         mutableAttributedText.append(attrText)
     }
     

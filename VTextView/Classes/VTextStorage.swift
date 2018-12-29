@@ -38,7 +38,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         return internalAttributedString.attributes(at: location, effectiveRange: range)
     }
     
-    override func setAttributes(_ attrs: [NSAttributedString.Key : Any]?, range: NSRange) {
+    override func setAttributes(_ attrs: [NSAttributedString.Key: Any]?, range: NSRange) {
         guard internalAttributedString.length > range.location else { return }
         
         switch status {
@@ -52,6 +52,13 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         self.internalAttributedString.setAttributes(attrs, range: range)
         self.edited(.editedAttributes, range: range, changeInLength: 0)
         self.endEditing()
+    }
+    
+    public func replaceAttributesIfNeeds(_ textView: UITextView) {
+        guard textView.selectedRange.length > 1 else { return }
+        self.status = .install
+        self.setAttributes(self.currentTypingAttribute,
+                           range: textView.selectedRange)
     }
     
     override func processEditing() {
