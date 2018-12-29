@@ -18,6 +18,7 @@
 		9B5720C921D748FF001940C2 /* UIView+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720C821D748FF001940C2 /* UIView+extension.swift */; };
 		9B5720CD21D7570E001940C2 /* UIFont+extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720CC21D7570E001940C2 /* UIFont+extension.swift */; };
 		9B5720CF21D7A34B001940C2 /* content.xml in Resources */ = {isa = PBXBuildFile; fileRef = 9B5720CE21D7A34B001940C2 /* content.xml */; };
+		9B5720D721D7AB50001940C2 /* XMLViewer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B5720D621D7AB50001940C2 /* XMLViewer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -50,6 +51,7 @@
 		9B5720C821D748FF001940C2 /* UIView+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIView+extension.swift"; sourceTree = "<group>"; };
 		9B5720CC21D7570E001940C2 /* UIFont+extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIFont+extension.swift"; sourceTree = "<group>"; };
 		9B5720CE21D7A34B001940C2 /* content.xml */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = content.xml; sourceTree = "<group>"; };
+		9B5720D621D7AB50001940C2 /* XMLViewer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = XMLViewer.swift; sourceTree = "<group>"; };
 		A7A6AF814D7807D13361812C /* VTextView.podspec */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text; name = VTextView.podspec; path = ../VTextView.podspec; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.ruby; };
 		E2785F697092B7F8543B4077 /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; name = README.md; path = ../README.md; sourceTree = "<group>"; };
 		EE82B84413330AF02F681B0C /* Pods-VTextView_Tests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-VTextView_Tests.release.xcconfig"; path = "Pods/Target Support Files/Pods-VTextView_Tests/Pods-VTextView_Tests.release.xcconfig"; sourceTree = "<group>"; };
@@ -117,6 +119,7 @@
 				9B5720C821D748FF001940C2 /* UIView+extension.swift */,
 				9B5720CC21D7570E001940C2 /* UIFont+extension.swift */,
 				9B5720CE21D7A34B001940C2 /* content.xml */,
+				9B5720D621D7AB50001940C2 /* XMLViewer.swift */,
 			);
 			name = "Example for VTextView";
 			path = VTextView;
@@ -384,6 +387,7 @@
 				9B5720C921D748FF001940C2 /* UIView+extension.swift in Sources */,
 				9B5720CD21D7570E001940C2 /* UIFont+extension.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				9B5720D721D7AB50001940C2 /* XMLViewer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

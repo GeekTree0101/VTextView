@@ -78,6 +78,12 @@ class ViewController: UIViewController {
             let data = try? Data(contentsOf: pathURL),
             let content = String(data: data, encoding: .utf8) else { return }
         self.textView.applyXML(content)
+        
+        self.navigationItem.rightBarButtonItem =
+            UIBarButtonItem.init(title: "Build",
+                                 style: .plain,
+                                 target: self,
+                                 action: #selector(build))
     }
     
     private func initEvent() {
@@ -116,12 +122,20 @@ class ViewController: UIViewController {
         
         controlView.dismissControlView.rx.tap.subscribe(onNext: { [weak self] _ in
             _ = self?.textView.resignFirstResponder()
-            print("DEBUG* \(self?.textView.buildToXML(packageTag: "content") ?? "" )")
         }).disposed(by: disposeBag)
     }
 }
 
 extension ViewController {
+    
+    @objc func build() {
+        
+        guard let output = self.textView.buildToXML(packageTag: "content") else {
+            return
+        }
+        let vc = XMLViewer.init(output)
+        self.navigationController?.pushViewController(vc, animated: true)
+    }
     
     private func initLayout() {
         self.view.addSubview(textView)
