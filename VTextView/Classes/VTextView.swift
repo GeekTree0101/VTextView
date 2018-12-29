@@ -103,6 +103,9 @@ open class VTextView: UITextView, UITextViewDelegate {
         guard let attributes = self.internalTextStorage?
             .currentLocationAttributes(self) else { return }
         self.currentTypingAttribute = attributes
+        
+        guard let key = attributes[VTextStyler.stylerKey] as? String else { return }
+        self.enableTypingAttribute(key: key)
     }
     
     public func buildToXML(packageTag: String?) -> String? {

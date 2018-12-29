@@ -12,7 +12,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     }
     
     internal var status: TypingStatus = .none
-    private let stylers: [VTextStyler]
+    private var stylers: [VTextStyler] = []
     
     private var internalAttributedString: NSMutableAttributedString = NSMutableAttributedString()
     
@@ -22,10 +22,14 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     internal var currentTypingAttribute: [NSAttributedString.Key: Any] = [:]
     
-    init(stylers: [VTextStyler]) {
+    convenience init(stylers: [VTextStyler]) {
+        self.init()
         self.stylers = stylers
-        super.init()
         self.delegate = self
+    }
+    
+    override init() {
+        super.init()
     }
     
     required init?(coder aDecoder: NSCoder) {
