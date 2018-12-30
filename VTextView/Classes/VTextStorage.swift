@@ -12,7 +12,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     }
     
     internal var status: TypingStatus = .none
-    private var stylers: [VTextStyler] = []
+    internal var typingManager: VTypingManager?
     
     private var internalAttributedString: NSMutableAttributedString = NSMutableAttributedString()
     
@@ -22,9 +22,9 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     internal var currentTypingAttribute: [NSAttributedString.Key: Any] = [:]
     
-    convenience init(stylers: [VTextStyler]) {
+    convenience init(typingManager: VTypingManager) {
         self.init()
-        self.stylers = stylers
+        self.typingManager = typingManager
         self.delegate = self
     }
     
@@ -125,18 +125,20 @@ extension VTextStorage {
             .enumerateAttributes(in: range,
                                  options: [], using: { attrs, subRange, _ in
                                     
-                                    output += self.stylers.map({
-                                        $0.buildXML(self.internalAttributedString,
-                                                    attrs: attrs,
-                                                    range: subRange)
-                                        
-                                    }).reduce("", { result, item -> String in
-                                        return result + (item ?? "")
-                                    })
+                                    let filteredText = self.internalAttributedString
+                                        .attributedSubstring(from: subRange).string
+                                        .replacingOccurrences(of: "\n", with: "\\n")
+
+                                    guard let tags = attrs[VTypingManager.managerKey] as? [String],
+                                        !filteredText.isEmpty else { return }
+                                    let open = tags.map({ "<\($0)>" }).joined()
+                                    let close = tags.map({ "</\($0)>" }).joined()
+                                    output += [open, filteredText, close].joined()
             })
         
         // combined char must be squeeze about </tag><tag> due to blank attribute char
-        let squeezTargetTags: [String] = self.stylers.map({ "</\($0.xmlTag)><\($0.xmlTag)>" })
+        let squeezTargetTags: [String] =
+            self.typingManager?.contexts.map({ "</\($0.xmlTag)><\($0.xmlTag)>" }) ?? []
         for targetTag in squeezTargetTags {
             output = output.replacingOccurrences(of: targetTag, with: "")
         }
@@ -149,7 +151,8 @@ extension VTextStorage {
     }
     
     internal func xmlToStorage(_ string: String) {
-        _ = VTextXMLParser(string, stylers: self.stylers, complateHandler: { attr in
+        guard let manager = self.typingManager else { return }
+        _ = VTextXMLParser(string, manager: manager, complateHandler: { attr in
             self.setAttributedString(attr)
         })
     }

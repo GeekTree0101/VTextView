@@ -3,16 +3,20 @@ import Foundation
 
 internal class VTextXMLParser: NSObject, XMLParserDelegate {
     
-    private let stylers: [VTextStyler]
-    private var currentStyler: VTextStyler?
+    private let manager: VTypingManager
     private var mutableAttributedText: NSMutableAttributedString = .init()
     public var complateHandler: (NSAttributedString) -> Void
     
+    private var contexts: [VTypingContext] {
+        return manager.contexts
+    }
+    
+    private var currentContext: VTypingContext?
+    
     init(_ xmlString: String,
-         stylers: [VTextStyler],
+         manager: VTypingManager,
          complateHandler: @escaping (NSAttributedString) -> Void) {
-        
-        self.stylers = stylers
+        self.manager = manager
         self.complateHandler = complateHandler
         super.init()
         
@@ -27,14 +31,17 @@ internal class VTextXMLParser: NSObject, XMLParserDelegate {
                 namespaceURI: String?,
                 qualifiedName qName: String?,
                 attributes attributeDict: [String : String] = [:]) {
-        self.currentStyler = self.stylers.filter({ $0.xmlTag == elementName }).first
+        self.currentContext = self.contexts.filter({ $0.xmlTag == elementName }).first
     }
     
     func parser(_ parser: XMLParser, foundCharacters string: String) {
-        guard let styler = self.currentStyler, !string.isEmpty else { return }
+        guard let context = self.currentContext,
+            !string.isEmpty,
+            var attributes = manager.delegate?.attributes(activeKeys: [context.key]) else { return }
         let filteredString = string.replacingOccurrences(of: "\\n", with: "\n")
+        attributes[VTypingManager.managerKey] = [context.key] as Any
         let attrText = NSAttributedString(string: filteredString,
-                                          attributes: styler.typingAttributes)
+                                          attributes: attributes)
         mutableAttributedText.append(attrText)
     }
     
@@ -42,7 +49,7 @@ internal class VTextXMLParser: NSObject, XMLParserDelegate {
                 didEndElement elementName: String,
                 namespaceURI: String?,
                 qualifiedName qName: String?) {
-        self.currentStyler = nil
+        self.currentContext = nil
     }
     
     func parserDidEndDocument(_ parser: XMLParser) {
