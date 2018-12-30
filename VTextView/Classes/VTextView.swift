@@ -2,6 +2,7 @@ import UIKit
 import Foundation
 import RxSwift
 import RxCocoa
+import BonMot
 
 open class VTextView: UITextView, UITextViewDelegate {
     
@@ -9,7 +10,7 @@ open class VTextView: UITextView, UITextViewDelegate {
         return self.textStorage as? VTextStorage
     }
     
-    internal var currentTypingAttribute: [NSAttributedString.Key: Any] {
+    internal var currentTypingAttribute: [NSAttributedString.Key: Any] = [:] {
         didSet {
             self.typingAttributes = currentTypingAttribute
             self.internalTextStorage?.currentTypingAttribute = currentTypingAttribute
@@ -24,7 +25,6 @@ open class VTextView: UITextView, UITextViewDelegate {
         layoutManager.addTextContainer(textContainer)
         let textStorage = VTextStorage(typingManager: manager)
         textStorage.addLayoutManager(layoutManager)
-        self.currentTypingAttribute = manager.defaultAttribute
         super.init(frame: .zero, textContainer: textContainer)
         super.delegate = self
         self.autocorrectionType = .no
@@ -48,6 +48,12 @@ open class VTextView: UITextView, UITextViewDelegate {
     }
     
     public func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
+        if self.currentTypingAttribute.isEmpty {
+            self.currentTypingAttribute =
+                internalTextStorage?
+                    .typingManager?
+                    .defaultAttribute ?? [:]
+        }
         return true
     }
     

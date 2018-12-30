@@ -3,6 +3,7 @@ import VTextView
 import SnapKit
 import RxSwift
 import RxCocoa
+import BonMot
 
 class ViewController: UIViewController {
     
@@ -73,11 +74,35 @@ class ViewController: UIViewController {
 
 extension ViewController: VTypingManagerDelegate {
     
-    func exceptionXMLParserBuildRule() -> [VTextXMLParserContext]? {
-   
-        return [VTextXMLParserContext(keys: [TypingScope.italic.rawValue,
-                                             TypingScope.bold.rawValue],
-                                      manager: typingManager)]
+    func attributes(activeKeys: [String]) -> StringStyle {
+        if activeKeys.contains(TypingScope.italic.rawValue),
+            activeKeys.contains(TypingScope.bold.rawValue) {
+            var emp = Emphasis.init(rawValue: 0)
+            emp.insert(.italic)
+            emp.insert(.bold)
+            return .init([.emphasis(emp),
+                          .font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
+        } else if activeKeys.contains(TypingScope.italic.rawValue) {
+            return .init([.emphasis(.italic),
+                          .font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
+        } else if activeKeys.contains(TypingScope.bold.rawValue) {
+            return .init([.emphasis(.bold),
+                          .font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
+        } else if activeKeys.contains(TypingScope.heading.rawValue) {
+            return .init([.font(UIFont.systemFont(ofSize: 30, weight: .medium)),
+                          .color(.black)])
+        } else if activeKeys.contains(TypingScope.quote.rawValue) {
+            return .init([.font(UIFont.systemFont(ofSize: 25, weight: .medium)),
+                          .color(.gray)])
+        } else if activeKeys.contains(TypingScope.normal.rawValue) {
+            return .init([.font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
+        } else {
+            return .init()
+        }
     }
     
     func bindEvents(_ manager: VTypingManager) {
@@ -90,32 +115,6 @@ extension ViewController: VTypingManagerDelegate {
                                  key: TypingScope.heading.rawValue)
         manager.bindControlEvent(controlView.quoteControlView,
                                  key: TypingScope.quote.rawValue)
-    }
-    
-    func attributes(activeKeys: [String]) -> [NSAttributedString.Key : Any] {
-        
-        if activeKeys.contains(TypingScope.italic.rawValue),
-            activeKeys.contains(TypingScope.bold.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 15).boldItalics(),
-                    .foregroundColor: UIColor.black]
-        } else if activeKeys.contains(TypingScope.italic.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 15).italics(),
-                    .foregroundColor: UIColor.black]
-        } else if activeKeys.contains(TypingScope.bold.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 15).bold(),
-                    .foregroundColor: UIColor.black]
-        } else if activeKeys.contains(TypingScope.heading.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 30, weight: .medium),
-                    .foregroundColor: UIColor.black]
-        } else if activeKeys.contains(TypingScope.quote.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 20),
-                    .foregroundColor: UIColor.gray]
-        } else if activeKeys.contains(TypingScope.normal.rawValue) {
-            return [.font: UIFont.systemFont(ofSize: 15),
-                    .foregroundColor: UIColor.black]
-        } else {
-            return [:]
-        }
     }
     
     func updateStatus(currentKey: String,
