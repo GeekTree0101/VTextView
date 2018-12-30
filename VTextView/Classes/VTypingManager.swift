@@ -2,15 +2,15 @@ import Foundation
 import UIKit
 import RxSwift
 import RxCocoa
+import BonMot
 
 public protocol VTypingManagerDelegate: class {
     
     func bindEvents(_ manager: VTypingManager)
-    func attributes(activeKeys: [String]) -> [NSAttributedString.Key: Any]
+    func attributes(activeKeys: [String]) -> StringStyle
     func updateStatus(currentKey: String,
                       isActive: Bool,
                       prevActivedKeys: [String]) -> VTypingManager.StatusManageContext?
-    func exceptionXMLParserBuildRule() -> [VTextXMLParserContext]?
 }
 
 public struct VTypingContext {
@@ -112,7 +112,7 @@ public class VTypingManager: NSObject {
         guard let delegate = self.delegate else {
             fatalError("Please inherit VTypingManagerDelegate!")
         }
-        return delegate.attributes(activeKeys: [defaultKey])
+        return delegate.attributes(activeKeys: [defaultKey]).attributes
     }
     
     public init(_ contexts: [VTypingContext], defaultKey: String) {
@@ -170,7 +170,7 @@ public class VTypingManager: NSObject {
             .filter({ $0.currentStatusRelay.value == .active })
             .map({ $0.key })
         
-        var currentAttributes = delegate.attributes(activeKeys: currentActiveKeys)
+        var currentAttributes = delegate.attributes(activeKeys: currentActiveKeys).attributes
         currentAttributes[VTypingManager.managerKey] = currentActiveKeys as Any
         self.currentAttributesRelay.accept(currentAttributes)
     }
