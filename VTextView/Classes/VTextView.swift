@@ -69,22 +69,7 @@ open class VTextView: UITextView, UITextViewDelegate {
     }
     
     public func textViewDidChangeSelection(_ textView: UITextView) {
-        guard let scope = self.internalTextStorage?
-            .currentLocationAttributes(self) else { return }
-        
-        switch scope {
-        case .isLast(let attrs, let key):
-            self.currentTypingAttribute = attrs
-            self.internalTextStorage?.typingManager?.didTapTargetKey(key)
-        case .attribute(let attrs):
-            guard self.selectedRange.length > 0,
-                let keys = attrs[VTypingManager.managerKey] as? [String],
-                let key = keys.first else { return }
-            self.currentTypingAttribute = attrs
-            self.internalTextStorage?.typingManager?.didTapTargetKey(key)
-        }
-        
-        // Selection 이동시랑 타이핑시 버그 처리방법 생각해보셈
+        self.internalTextStorage?.updateCurrentLocationAttributesIfNeeds(self)
     }
     
     public func buildToXML(packageTag: String?) -> String? {
