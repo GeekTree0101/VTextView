@@ -104,13 +104,15 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     internal func currentLocationAttributes(_ textView: VTextView) -> [NSAttributedString.Key : Any]? {
         guard self.internalAttributedString.length - textView.selectedRange.location > 1 else {
-            return nil
+            return typingManager?.defaultAttribute
         }
         
         let currentAttributes =
             self.attributes(at: textView.selectedRange.location,
                             effectiveRange: nil)
-        guard !currentAttributes.isEmpty else { return nil }
+        guard !currentAttributes.isEmpty else {
+            return typingManager?.defaultAttribute
+        }
         return currentAttributes
     }
     

@@ -44,13 +44,10 @@ open class VTextView: UITextView, UITextViewDelegate {
     
         if isBlock, let range = internalTextStorage?.paragraphStyleRange(self) {
             self.internalTextStorage?.status = .install
-            self.internalTextStorage?.setAttributes(attr,
-                                                    range: range)
-        } else if !isBlock {
+            self.internalTextStorage?.setAttributes(attr, range: range)
+        } else {
             self.internalTextStorage?.setAttributes(attr,
                                                     range: self.selectedRange)
-        } else {
-            return
         }
         
         self.currentTypingAttribute = attr
@@ -76,11 +73,11 @@ open class VTextView: UITextView, UITextViewDelegate {
             .currentLocationAttributes(self) else { return }
         self.currentTypingAttribute = attributes
         
-        guard self.selectedRange.length < 1,
-            let keys = attributes[VTypingManager.managerKey] as? [String],
-            let anyFirstKey = keys.first else { return }
-        
         guard self.selectedRange.length < 1 else { return }
+        let keys = attributes[VTypingManager.managerKey] as? [String]
+        guard let anyFirstKey = keys?.first ??
+            internalTextStorage?.typingManager?.defaultKey else { return }
+        
         self.internalTextStorage?.typingManager?.didTapTargetKey(anyFirstKey)
     }
     
