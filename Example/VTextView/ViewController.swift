@@ -73,6 +73,13 @@ class ViewController: UIViewController {
 
 extension ViewController: VTypingManagerDelegate {
     
+    func exceptionXMLParserBuildRule() -> [VTextXMLParserContext]? {
+   
+        return [VTextXMLParserContext(keys: [TypingScope.italic.rawValue,
+                                             TypingScope.bold.rawValue],
+                                      manager: typingManager)]
+    }
+    
     func bindEvents(_ manager: VTypingManager) {
         
         manager.bindControlEvent(controlView.boldControlView,

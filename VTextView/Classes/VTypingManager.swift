@@ -10,8 +10,8 @@ public protocol VTypingManagerDelegate: class {
     func updateStatus(currentKey: String,
                       isActive: Bool,
                       prevActivedKeys: [String]) -> VTypingManager.StatusManageContext?
+    func exceptionXMLParserBuildRule() -> [VTextXMLParserContext]?
 }
-
 
 public struct VTypingContext {
     
@@ -99,6 +99,14 @@ public class VTypingManager: NSObject {
     
     private let defaultKey: String
     private var eventDisposeBag = DisposeBag()
+    
+    public var allXMLTags: [String] {
+        return contexts.map({ $0.xmlTag })
+    }
+    
+    public var allKeys: [String] {
+        return contexts.map({ $0.key })
+    }
     
     public var defaultAttribute: [NSAttributedString.Key: Any]! {
         guard let delegate = self.delegate else {
@@ -197,5 +205,13 @@ public class VTypingManager: NSObject {
         self.rx.isDisable(key)
             .bind(to: target.rx.isEnabled)
             .disposed(by: eventDisposeBag)
+    }
+    
+    public func getXMLTag(_ key: String) -> String? {
+        return contexts.filter({ $0.key == key }).map({ $0.xmlTag }).first
+    }
+    
+    public func getXMLTags(_ keys: [String]) -> [String]? {
+        return contexts.filter({ keys.contains($0.key) }).map({ $0.xmlTag })
     }
 }
