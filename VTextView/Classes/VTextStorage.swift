@@ -113,6 +113,11 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         guard !currentAttributes.isEmpty else { return nil }
         return currentAttributes
     }
+    
+    public func paragraphStyleRange(_ textView: VTextView) -> NSRange {
+        return NSString(string: self.internalAttributedString.string)
+            .paragraphRange(for: textView.selectedRange)
+    }
 }
 
 extension VTextStorage {

@@ -24,6 +24,12 @@ public struct VTypingContext {
     public var key: String
     public var currentStatusRelay = BehaviorRelay<Status>(value: .inactive)
     public var xmlTag: String
+    public var isBlockStyle: Bool = false
+    
+    public init(_ key: String, xmlTag: String, isBlockStyle: Bool) {
+        self.init(key, xmlTag: xmlTag)
+        self.isBlockStyle = isBlockStyle
+    }
     
     public init(_ key: String, xmlTag: String) {
         self.key = key
@@ -86,6 +92,8 @@ public class VTypingManager: NSObject {
             self.delegate?.bindEvents(self)
         }
     }
+    
+    internal let blockAttributeRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let currentAttributesRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let contexts: [VTypingContext]
     
@@ -172,7 +180,12 @@ public class VTypingManager: NSObject {
         
         var currentAttributes = delegate.attributes(activeKeys: currentActiveKeys).attributes
         currentAttributes[VTypingManager.managerKey] = currentActiveKeys as Any
-        self.currentAttributesRelay.accept(currentAttributes)
+        
+        if targetContext.isBlockStyle, isActive {
+            self.blockAttributeRelay.accept(currentAttributes)
+        } else {
+            self.currentAttributesRelay.accept(currentAttributes)
+        }
     }
     
     /**

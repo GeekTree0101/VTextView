@@ -31,15 +31,29 @@ open class VTextView: UITextView, UITextViewDelegate {
         
         manager.currentAttributesRelay.observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] attr in
-                self?.setTypingAttributeIfNeeds(attr)
+                self?.setTypingAttributeIfNeeds(attr, isBlock: false)
+            }).disposed(by: disposeBag)
+        
+        manager.blockAttributeRelay.observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] attr in
+                self?.setTypingAttributeIfNeeds(attr, isBlock: true)
             }).disposed(by: disposeBag)
     }
     
-    private func setTypingAttributeIfNeeds(_ attr: [NSAttributedString.Key: Any]) {
-        self.internalTextStorage?.setAttributes(attr,
-                                                range: self.selectedRange)
-        self.currentTypingAttribute = attr
+    private func setTypingAttributeIfNeeds(_ attr: [NSAttributedString.Key: Any], isBlock: Bool) {
+    
+        if isBlock, let range = internalTextStorage?.paragraphStyleRange(self) {
+            self.internalTextStorage?.status = .install
+            self.internalTextStorage?.setAttributes(attr,
+                                                    range: range)
+        } else if !isBlock {
+            self.internalTextStorage?.setAttributes(attr,
+                                                    range: self.selectedRange)
+        } else {
+            return
+        }
         
+        self.currentTypingAttribute = attr
         self.internalTextStorage?.replaceAttributesIfNeeds(self)
     }
     
@@ -61,8 +75,12 @@ open class VTextView: UITextView, UITextViewDelegate {
         guard let attributes = self.internalTextStorage?
             .currentLocationAttributes(self) else { return }
         self.currentTypingAttribute = attributes
-        guard let keys = attributes[VTypingManager.managerKey] as? [String],
+        
+        guard self.selectedRange.length < 1,
+            let keys = attributes[VTypingManager.managerKey] as? [String],
             let anyFirstKey = keys.first else { return }
+        
+        guard self.selectedRange.length < 1 else { return }
         self.internalTextStorage?.typingManager?.didTapTargetKey(anyFirstKey)
     }
     
