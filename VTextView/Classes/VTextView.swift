@@ -3,21 +3,6 @@ import Foundation
 import RxSwift
 import RxCocoa
 
-extension Reactive where Base: VTextView {
-    
-    public func toggleStatus(key: String) -> Binder<Void> {
-        return Binder(base) { view, _ in
-            guard let styler = view.targetStyler(key) else { return }
-            
-            if styler.isEnableRelay.value {
-                view.disableTypingAttribute(key: key)
-            } else {
-                view.enableTypingAttribute(key: key)
-            }
-        }
-    }
-}
-
 open class VTextView: UITextView, UITextViewDelegate {
     
     private var internalTextStorage: VTextStorage? {
@@ -31,62 +16,29 @@ open class VTextView: UITextView, UITextViewDelegate {
         }
     }
     
-    private let stylers: [VTextStyler]
-    private let defaultStyler: VTextStyler?
+    let disposeBag = DisposeBag()
     
-    public required init(stylers: [VTextStyler], defaultKey: String) {
+    public required init(manager: VTypingManager) {
         let textContainer = NSTextContainer(size: .zero)
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)
-        let textStorage = VTextStorage(stylers: stylers)
+        let textStorage = VTextStorage(typingManager: manager)
         textStorage.addLayoutManager(layoutManager)
-        let styler = stylers.filter({ $0.key == defaultKey }).first
-        styler?.isEnableRelay.accept(true)
-        textStorage.currentTypingAttribute = styler?.typingAttributes ?? [:]
-        self.currentTypingAttribute = styler?.typingAttributes ?? [:]
-        self.stylers = stylers
-        self.defaultStyler = styler
+        self.currentTypingAttribute = manager.defaultAttribute
         super.init(frame: .zero, textContainer: textContainer)
         super.delegate = self
         self.autocorrectionType = .no
+        
+        manager.currentAttributesRelay.observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] attr in
+                self?.setTypingAttributeIfNeeds(attr)
+            }).disposed(by: disposeBag)
     }
     
-    public func enableTypingAttribute(key: String) {
-        
-        for styler in stylers {
-            if styler.key == key {
-                styler.isEnableRelay.accept(true)
-            } else {
-                styler.isEnableRelay.accept(false)
-            }
-        }
-        
-        self.setTypingAttributeIfNeeds()
-    }
-    
-    public func targetStyler(_ key: String) -> VTextStyler? {
-        return self.stylers.filter({ $0.key == key }).first
-    }
-    
-    public func disableTypingAttribute(key: String) {
-        guard let targetStyler = self.stylers.filter({ $0.key == key }).first else {
-            return
-        }
-        targetStyler.isEnableRelay.accept(false)
-        
-        self.setTypingAttributeIfNeeds()
-    }
-    
-    private func setTypingAttributeIfNeeds() {
-        
-        guard let targetStyler =
-            self.stylers.filter({ $0.isEnableRelay.value }).first ?? defaultStyler else { return }
-        
-        // bold -> others should be disable
-        
-        self.internalTextStorage?.setAttributes(targetStyler.typingAttributes,
+    private func setTypingAttributeIfNeeds(_ attr: [NSAttributedString.Key: Any]) {
+        self.internalTextStorage?.setAttributes(attr,
                                                 range: self.selectedRange)
-        self.currentTypingAttribute = targetStyler.typingAttributes
+        self.currentTypingAttribute = attr
         
         self.internalTextStorage?.replaceAttributesIfNeeds(self)
     }
@@ -103,9 +55,9 @@ open class VTextView: UITextView, UITextViewDelegate {
         guard let attributes = self.internalTextStorage?
             .currentLocationAttributes(self) else { return }
         self.currentTypingAttribute = attributes
-        
-        guard let key = attributes[VTextStyler.stylerKey] as? String else { return }
-        self.enableTypingAttribute(key: key)
+        guard let keys = attributes[VTypingManager.managerKey] as? [String],
+            let anyFirstKey = keys.first else { return }
+        self.internalTextStorage?.typingManager?.didTapTargetKey(anyFirstKey)
     }
     
     public func buildToXML(packageTag: String?) -> String? {

@@ -15,45 +15,22 @@ class ViewController: UIViewController {
         case quote
     }
     
-    let defaultStyle: VTextStyler =
-        .init(TypingScope.normal.rawValue,
-              attributes: [.font: UIFont.systemFont(ofSize: 15),
-                           .foregroundColor: UIColor.black],
-              xmlTag: "p")
-    
-    let boldStyle: VTextStyler =
-        .init(TypingScope.bold.rawValue,
-              attributes: [.font: UIFont.systemFont(ofSize: 15).bold(),
-                           .foregroundColor: UIColor.black],
-              xmlTag: "b")
-    
-    let italicStyle: VTextStyler =
-        .init(TypingScope.italic.rawValue,
-              attributes: [.font: UIFont.systemFont(ofSize: 15).italics(),
-                           .foregroundColor: UIColor.black],
-              xmlTag: "i")
-    
-    let headingStyle: VTextStyler =
-        .init(TypingScope.heading.rawValue,
-              attributes: [.font: UIFont.systemFont(ofSize: 30, weight: .medium),
-                           .foregroundColor: UIColor.black],
-              xmlTag: "h2")
-    
-    let quoteStyle: VTextStyler =
-        .init(TypingScope.quote.rawValue,
-              attributes: [.font: UIFont.systemFont(ofSize: 20),
-                           .foregroundColor: UIColor.gray],
-              xmlTag: "blockquote")
-    
-    
-    lazy var stylers: [VTextStyler] = [defaultStyle, boldStyle, italicStyle, headingStyle, quoteStyle]
-    
     // Create VTextView
-    lazy var textView = VTextView(stylers: self.stylers,
-                                  defaultKey: TypingScope.normal.rawValue)
+    lazy var textView = VTextView(manager: typingManager)
     
     let controlView = TypingControlView(frame: .zero)
     let disposeBag = DisposeBag()
+    
+    lazy var typingManager: VTypingManager = {
+        let manager = VTypingManager([.init(TypingScope.normal.rawValue, xmlTag: "p"),
+                                      .init(TypingScope.bold.rawValue, xmlTag: "b"),
+                                      .init(TypingScope.italic.rawValue, xmlTag: "i"),
+                                      .init(TypingScope.heading.rawValue, xmlTag: "h2"),
+                                      .init(TypingScope.quote.rawValue, xmlTag: "blockquote")],
+                                     defaultKey: TypingScope.normal.rawValue)
+        manager.delegate = self
+        return manager
+    }()
     
     init() {
         super.init(nibName: nil, bundle: nil)
@@ -88,41 +65,108 @@ class ViewController: UIViewController {
     
     private func initEvent() {
         
-        controlView.boldControlView.rx.tap
-            .bind(to: textView.rx.toggleStatus(key: TypingScope.bold.rawValue))
-            .disposed(by: disposeBag)
-        
-        controlView.italicControlView.rx.tap
-            .bind(to: textView.rx.toggleStatus(key: TypingScope.italic.rawValue))
-            .disposed(by: disposeBag)
-        
-        controlView.headingControlView.rx.tap
-            .bind(to: textView.rx.toggleStatus(key: TypingScope.heading.rawValue))
-            .disposed(by: disposeBag)
-        
-        controlView.quoteControlView.rx.tap
-            .bind(to: textView.rx.toggleStatus(key: TypingScope.quote.rawValue))
-            .disposed(by: disposeBag)
-        
-        boldStyle.isEnableRelay
-            .bind(to: controlView.boldControlView.rx.isSelected)
-            .disposed(by: disposeBag)
-        
-        italicStyle.isEnableRelay
-            .bind(to: controlView.italicControlView.rx.isSelected)
-            .disposed(by: disposeBag)
-        
-        headingStyle.isEnableRelay
-            .bind(to: controlView.headingControlView.rx.isSelected)
-            .disposed(by: disposeBag)
-        
-        quoteStyle.isEnableRelay
-            .bind(to: controlView.quoteControlView.rx.isSelected)
-            .disposed(by: disposeBag)
-        
         controlView.dismissControlView.rx.tap.subscribe(onNext: { [weak self] _ in
             _ = self?.textView.resignFirstResponder()
         }).disposed(by: disposeBag)
+    }
+}
+
+extension ViewController: VTypingManagerDelegate {
+    
+    func bindEvents(_ manager: VTypingManager) {
+        
+        manager.bindControlEvent(controlView.boldControlView,
+                                 key: TypingScope.bold.rawValue)
+        manager.bindControlEvent(controlView.italicControlView,
+                                 key: TypingScope.italic.rawValue)
+        manager.bindControlEvent(controlView.headingControlView,
+                                 key: TypingScope.heading.rawValue)
+        manager.bindControlEvent(controlView.quoteControlView,
+                                 key: TypingScope.quote.rawValue)
+    }
+    
+    func attributes(activeKeys: [String]) -> [NSAttributedString.Key : Any] {
+        
+        if activeKeys.contains(TypingScope.italic.rawValue),
+            activeKeys.contains(TypingScope.bold.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 15).boldItalics(),
+                    .foregroundColor: UIColor.black]
+        } else if activeKeys.contains(TypingScope.italic.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 15).italics(),
+                    .foregroundColor: UIColor.black]
+        } else if activeKeys.contains(TypingScope.bold.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 15).bold(),
+                    .foregroundColor: UIColor.black]
+        } else if activeKeys.contains(TypingScope.heading.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 30, weight: .medium),
+                    .foregroundColor: UIColor.black]
+        } else if activeKeys.contains(TypingScope.quote.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 20),
+                    .foregroundColor: UIColor.gray]
+        } else if activeKeys.contains(TypingScope.normal.rawValue) {
+            return [.font: UIFont.systemFont(ofSize: 15),
+                    .foregroundColor: UIColor.black]
+        } else {
+            return [:]
+        }
+    }
+    
+    func updateStatus(currentKey: String,
+                      isActive: Bool,
+                      prevActivedKeys: [String]) -> VTypingManager.StatusManageContext? {
+        guard let key = TypingScope(rawValue: currentKey) else { return nil }
+        var context = VTypingManager.StatusManageContext()
+        
+        if isActive {
+            context.active.append(key.rawValue)
+            context.inactive.append(TypingScope.normal.rawValue)
+        } else {
+            context.inactive.append(key.rawValue)
+        }
+        
+        switch key {
+        case .bold:
+            if prevActivedKeys.contains(TypingScope.italic.rawValue) {
+                context.active.append(TypingScope.italic.rawValue)
+            } else if !isActive {
+                context.active.append(TypingScope.normal.rawValue)
+            }
+        case .italic:
+            if prevActivedKeys.contains(TypingScope.bold.rawValue) {
+                context.active.append(TypingScope.bold.rawValue)
+            } else if !isActive {
+                context.active.append(TypingScope.normal.rawValue)
+            }
+        case .heading:
+            if isActive {
+                context.disable.append(contentsOf: [TypingScope.bold.rawValue,
+                                                    TypingScope.italic.rawValue])
+                context.inactive.append(TypingScope.quote.rawValue)
+            } else {
+                context.inactive.append(contentsOf: [TypingScope.bold.rawValue,
+                                                     TypingScope.italic.rawValue])
+                context.active.append(TypingScope.normal.rawValue)
+            }
+        case .quote:
+            if isActive {
+                context.disable.append(contentsOf: [TypingScope.bold.rawValue,
+                                                    TypingScope.italic.rawValue])
+                context.inactive.append(TypingScope.heading.rawValue)
+            } else {
+                context.inactive.append(contentsOf: [TypingScope.bold.rawValue,
+                                                     TypingScope.italic.rawValue])
+                context.active.append(TypingScope.normal.rawValue)
+            }
+        default:
+            context.inactive.append(contentsOf: [TypingScope.heading.rawValue,
+                                                 TypingScope.quote.rawValue,
+                                                 TypingScope.bold.rawValue,
+                                                 TypingScope.italic.rawValue])
+            context.active = [TypingScope.normal.rawValue]
+            return context
+        }
+        
+        return context
     }
 }
 
