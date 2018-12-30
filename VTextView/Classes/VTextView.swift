@@ -31,15 +31,26 @@ open class VTextView: UITextView, UITextViewDelegate {
         
         manager.currentAttributesRelay.observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] attr in
-                self?.setTypingAttributeIfNeeds(attr)
+                self?.setTypingAttributeIfNeeds(attr, isBlock: false)
+            }).disposed(by: disposeBag)
+        
+        manager.blockAttributeRelay.observeOn(MainScheduler.instance)
+            .subscribe(onNext: { [weak self] attr in
+                self?.setTypingAttributeIfNeeds(attr, isBlock: true)
             }).disposed(by: disposeBag)
     }
     
-    private func setTypingAttributeIfNeeds(_ attr: [NSAttributedString.Key: Any]) {
-        self.internalTextStorage?.setAttributes(attr,
-                                                range: self.selectedRange)
-        self.currentTypingAttribute = attr
+    private func setTypingAttributeIfNeeds(_ attr: [NSAttributedString.Key: Any], isBlock: Bool) {
+    
+        if isBlock, let range = internalTextStorage?.paragraphStyleRange(self) {
+            self.internalTextStorage?.status = .install
+            self.internalTextStorage?.setAttributes(attr, range: range)
+        } else {
+            self.internalTextStorage?.setAttributes(attr,
+                                                    range: self.selectedRange)
+        }
         
+        self.currentTypingAttribute = attr
         self.internalTextStorage?.replaceAttributesIfNeeds(self)
     }
     
@@ -58,12 +69,22 @@ open class VTextView: UITextView, UITextViewDelegate {
     }
     
     public func textViewDidChangeSelection(_ textView: UITextView) {
-        guard let attributes = self.internalTextStorage?
+        guard let scope = self.internalTextStorage?
             .currentLocationAttributes(self) else { return }
-        self.currentTypingAttribute = attributes
-        guard let keys = attributes[VTypingManager.managerKey] as? [String],
-            let anyFirstKey = keys.first else { return }
-        self.internalTextStorage?.typingManager?.didTapTargetKey(anyFirstKey)
+        
+        switch scope {
+        case .isLast(let attrs, let key):
+            self.currentTypingAttribute = attrs
+            self.internalTextStorage?.typingManager?.didTapTargetKey(key)
+        case .attribute(let attrs):
+            guard self.selectedRange.length > 0,
+                let keys = attrs[VTypingManager.managerKey] as? [String],
+                let key = keys.first else { return }
+            self.currentTypingAttribute = attrs
+            self.internalTextStorage?.typingManager?.didTapTargetKey(key)
+        }
+        
+        // Selection 이동시랑 타이핑시 버그 처리방법 생각해보셈
     }
     
     public func buildToXML(packageTag: String?) -> String? {
@@ -83,5 +104,4 @@ open class VTextView: UITextView, UITextViewDelegate {
         self.internalTextStorage?.status = .none
         return super.resignFirstResponder()
     }
-    
 }

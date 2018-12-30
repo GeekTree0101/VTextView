@@ -26,8 +26,12 @@ class ViewController: UIViewController {
         let manager = VTypingManager([.init(TypingScope.normal.rawValue, xmlTag: "p"),
                                       .init(TypingScope.bold.rawValue, xmlTag: "b"),
                                       .init(TypingScope.italic.rawValue, xmlTag: "i"),
-                                      .init(TypingScope.heading.rawValue, xmlTag: "h2"),
-                                      .init(TypingScope.quote.rawValue, xmlTag: "blockquote")],
+                                      .init(TypingScope.heading.rawValue,
+                                            xmlTag: "h2",
+                                            isBlockStyle: true),
+                                      .init(TypingScope.quote.rawValue,
+                                            xmlTag: "blockquote",
+                                            isBlockStyle: true)],
                                      defaultKey: TypingScope.normal.rawValue)
         manager.delegate = self
         return manager
@@ -95,8 +99,10 @@ extension ViewController: VTypingManagerDelegate {
             return .init([.font(UIFont.systemFont(ofSize: 30, weight: .medium)),
                           .color(.black)])
         } else if activeKeys.contains(TypingScope.quote.rawValue) {
-            return .init([.font(UIFont.systemFont(ofSize: 25, weight: .medium)),
-                          .color(.gray)])
+            return .init([.font(UIFont.systemFont(ofSize: 20)),
+                          .color(.gray),
+                          .firstLineHeadIndent(19.0),
+                          .headIndent(19.0)])
         } else if activeKeys.contains(TypingScope.normal.rawValue) {
             return .init([.font(UIFont.systemFont(ofSize: 15)),
                           .color(.black)])

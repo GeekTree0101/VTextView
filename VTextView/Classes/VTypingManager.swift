@@ -24,6 +24,12 @@ public struct VTypingContext {
     public var key: String
     public var currentStatusRelay = BehaviorRelay<Status>(value: .inactive)
     public var xmlTag: String
+    public var isBlockStyle: Bool = false
+    
+    public init(_ key: String, xmlTag: String, isBlockStyle: Bool) {
+        self.init(key, xmlTag: xmlTag)
+        self.isBlockStyle = isBlockStyle
+    }
     
     public init(_ key: String, xmlTag: String) {
         self.key = key
@@ -72,9 +78,7 @@ public class VTypingManager: NSObject {
         public var inactive: [String] = []
         public var disable: [String] = []
         
-        public init() {
-            
-        }
+        public init() { }
     }
     
     internal static let managerKey: NSAttributedString.Key =
@@ -86,6 +90,8 @@ public class VTypingManager: NSObject {
             self.delegate?.bindEvents(self)
         }
     }
+    
+    internal let blockAttributeRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let currentAttributesRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let contexts: [VTypingContext]
     
@@ -97,7 +103,7 @@ public class VTypingManager: NSObject {
     internal let enableContextsRelay = PublishRelay<Set<String>>()
     internal let disableContextsRelay = PublishRelay<Set<String>>()
     
-    private let defaultKey: String
+    public let defaultKey: String
     private var eventDisposeBag = DisposeBag()
     
     public var allXMLTags: [String] {
@@ -172,7 +178,12 @@ public class VTypingManager: NSObject {
         
         var currentAttributes = delegate.attributes(activeKeys: currentActiveKeys).attributes
         currentAttributes[VTypingManager.managerKey] = currentActiveKeys as Any
-        self.currentAttributesRelay.accept(currentAttributes)
+        
+        if targetContext.isBlockStyle {
+            self.blockAttributeRelay.accept(currentAttributes)
+        } else {
+            self.currentAttributesRelay.accept(currentAttributes)
+        }
     }
     
     /**

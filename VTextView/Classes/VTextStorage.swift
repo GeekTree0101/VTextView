@@ -102,16 +102,28 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         self.endEditing()
     }
     
-    internal func currentLocationAttributes(_ textView: VTextView) -> [NSAttributedString.Key : Any]? {
+    enum CurrentLocationScope {
+        case isLast([NSAttributedString.Key : Any], String)
+        case attribute([NSAttributedString.Key : Any])
+    }
+    
+    internal func currentLocationAttributes(_ textView: VTextView) -> CurrentLocationScope {
         guard self.internalAttributedString.length - textView.selectedRange.location > 1 else {
-            return nil
+            return .isLast(typingManager?.defaultAttribute ?? [:], typingManager?.defaultKey ?? "")
         }
         
         let currentAttributes =
             self.attributes(at: textView.selectedRange.location,
                             effectiveRange: nil)
-        guard !currentAttributes.isEmpty else { return nil }
-        return currentAttributes
+        guard !currentAttributes.isEmpty else {
+            return .attribute(typingManager?.defaultAttribute ?? [:])
+        }
+        return .attribute(currentAttributes)
+    }
+    
+    public func paragraphStyleRange(_ textView: VTextView) -> NSRange {
+        return NSString(string: self.internalAttributedString.string)
+            .paragraphRange(for: textView.selectedRange)
     }
 }
 
