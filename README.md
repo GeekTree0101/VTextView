@@ -1,4 +1,5 @@
-# VTextView
+
+<img src="https://github.com/GeekTree0101/VTextView/blob/master/res/banner.jpg?raw=true" />
 
 [![CI Status](https://img.shields.io/travis/Geektree0101/VTextView.svg?style=flat)](https://travis-ci.org/Geektree0101/VTextView)
 [![Version](https://img.shields.io/cocoapods/v/VTextView.svg?style=flat)](https://cocoapods.org/pods/VTextView)
