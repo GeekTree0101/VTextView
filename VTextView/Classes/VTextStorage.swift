@@ -15,6 +15,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     internal var typingManager: VTypingManager?
     
     private var internalAttributedString: NSMutableAttributedString = NSMutableAttributedString()
+    private var prevLocation: Int = 0
     
     override var string: String {
         return self.internalAttributedString.string
@@ -102,23 +103,30 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         self.endEditing()
     }
     
-    enum CurrentLocationScope {
-        case isLast([NSAttributedString.Key : Any], String)
-        case attribute([NSAttributedString.Key : Any])
-    }
-    
-    internal func currentLocationAttributes(_ textView: VTextView) -> CurrentLocationScope {
-        guard self.internalAttributedString.length - textView.selectedRange.location > 1 else {
-            return .isLast(typingManager?.defaultAttribute ?? [:], typingManager?.defaultKey ?? "")
+    internal func updateCurrentLocationAttributesIfNeeds(_ textView: VTextView) {
+        
+        if textView.selectedRange.length < 1,
+            abs(textView.selectedRange.location - self.prevLocation) > 1 {
+            
+            let currentAttributes =
+                self.attributes(at: textView.selectedRange.location,
+                                effectiveRange: nil)
+            
+            if let keys = currentAttributes[VTypingManager.managerKey] as? [String],
+                let key = keys.first {
+                textView.currentTypingAttribute = currentTypingAttribute
+                self.typingManager?.resetStatus()
+                self.typingManager?.didTapTargetKey(key)
+            } else {
+                let key = typingManager?.defaultKey ?? ""
+                let defaultAttributes = typingManager?.defaultAttribute ?? [:]
+                textView.currentTypingAttribute = defaultAttributes
+                self.typingManager?.resetStatus()
+                self.typingManager?.didTapTargetKey(key)
+            }
         }
         
-        let currentAttributes =
-            self.attributes(at: textView.selectedRange.location,
-                            effectiveRange: nil)
-        guard !currentAttributes.isEmpty else {
-            return .attribute(typingManager?.defaultAttribute ?? [:])
-        }
-        return .attribute(currentAttributes)
+        self.prevLocation = textView.selectedRange.location
     }
     
     public func paragraphStyleRange(_ textView: VTextView) -> NSRange {

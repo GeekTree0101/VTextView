@@ -127,6 +127,23 @@ public class VTypingManager: NSObject {
         super.init()
     }
     
+    public func resetStatus() {
+        for context in contexts {
+            if context.key == self.defaultKey {
+                context.currentStatusRelay.accept(.active)
+            } else {
+                context.currentStatusRelay.accept(.inactive)
+            }
+        }
+        
+        let targetKeys = contexts
+            .filter({ $0.currentStatusRelay.value == .inactive })
+            .map({ $0.key })
+        self.activeContextsRelay.accept(.init([defaultKey]))
+        self.inactiveContextsRelay.accept(.init(targetKeys))
+        self.enableContextsRelay.accept(.init(targetKeys))
+    }
+    
     public func didTapTargetKey(_ key: String) {
         guard let delegate = self.delegate else {
             fatalError("Please inherit VTypingManagerDelegate!")
