@@ -1,7 +1,42 @@
 import UIKit
 import Foundation
+import BonMot
 
-internal class VTextXMLParser: NSObject, XMLParserDelegate {
+public struct VTextXMLParserContext {
+    
+    let keys: [String]
+    let xmlTags: [String]
+    var convenienceXMLIdentifier: String {
+        return xmlTags.joined(separator: "-")
+    }
+    
+    public init(keys: [String], manager: VTypingManager) {
+        self.keys = keys
+        self.xmlTags = manager.getXMLTags(keys) ?? []
+    }
+    
+    internal func buildXMLStyleRule(_ manager: VTypingManager) -> XMLStyleRule? {
+        var attrs = manager.delegate.attributes(activeKeys: self.keys)
+        attrs[VTypingManager.managerKey] = self.keys
+        let parts = StringStyle.Part.extraAttributes(attrs)
+        return XMLStyleRule.style(convenienceXMLIdentifier, .init(parts))
+    }
+    
+    internal func replaceConvenienceXMLIdentifiers(_ string: String) -> String {
+        let open = xmlTags.map({ "<\($0)>" }).joined()
+        let close = xmlTags.reversed().map({ "</\($0)>" }).joined()
+        let reverseOpen = xmlTags.reversed().map({ "<\($0)>" }).joined()
+        let reverseClose = xmlTags.map({ "</\($0)>" }).joined()
+        
+        return string
+            .replacingOccurrences(of: open, with: "<\(convenienceXMLIdentifier)>")
+            .replacingOccurrences(of: close, with: "</\(convenienceXMLIdentifier)>")
+            .replacingOccurrences(of: reverseOpen, with: "<\(convenienceXMLIdentifier)>")
+            .replacingOccurrences(of: reverseClose, with: "</\(convenienceXMLIdentifier)>")
+    }
+}
+
+internal class VTextXMLParser: NSObject {
     
     private let manager: VTypingManager
     private var mutableAttributedText: NSMutableAttributedString = .init()
@@ -20,39 +55,32 @@ internal class VTextXMLParser: NSObject, XMLParserDelegate {
         self.complateHandler = complateHandler
         super.init()
         
-        guard let xmlData = xmlString.data(using: .utf8) else { return }
-        let parser = XMLParser(data: xmlData)
-        parser.delegate = self
-        parser.parse()
-    }
-    
-    func parser(_ parser: XMLParser,
-                didStartElement elementName: String,
-                namespaceURI: String?,
-                qualifiedName qName: String?,
-                attributes attributeDict: [String : String] = [:]) {
-        self.currentContext = self.contexts.filter({ $0.xmlTag == elementName }).first
-    }
-    
-    func parser(_ parser: XMLParser, foundCharacters string: String) {
-        guard let context = self.currentContext,
-            !string.isEmpty,
-            var attributes = manager.delegate?.attributes(activeKeys: [context.key]) else { return }
-        let filteredString = string.replacingOccurrences(of: "\\n", with: "\n")
-        attributes[VTypingManager.managerKey] = [context.key] as Any
-        let attrText = NSAttributedString(string: filteredString,
-                                          attributes: attributes)
-        mutableAttributedText.append(attrText)
-    }
-    
-    func parser(_ parser: XMLParser,
-                didEndElement elementName: String,
-                namespaceURI: String?,
-                qualifiedName qName: String?) {
-        self.currentContext = nil
-    }
-    
-    func parserDidEndDocument(_ parser: XMLParser) {
-        self.complateHandler(self.mutableAttributedText)
+        var mutableXMLString: String = xmlString.replacingOccurrences(of: "\\n", with: "\n")
+        
+        // build rules
+        var rules = manager.allKeys.map({
+            VTextXMLParserContext(keys: [$0], manager: manager)
+        })
+        
+        if let exceptionRules = self.manager.delegate?.exceptionXMLParserBuildRule() {
+            rules.append(contentsOf: exceptionRules)
+        }
+        
+        // convert formatted xml string for conveniecne  parsing
+        for rule in rules {
+            mutableXMLString = rule.replaceConvenienceXMLIdentifiers(mutableXMLString)
+        }
+        
+        let xmlRules: [XMLStyleRule] = rules
+            .map({ $0.buildXMLStyleRule(manager) })
+            .filter({ $0 != nil })
+            .map({ $0! })
+        
+        do {
+            let attrText = try NSAttributedString.composed(ofXML: mutableXMLString, rules: xmlRules)
+            self.complateHandler(attrText)
+        } catch {
+            fatalError("Parse Error: \(mutableXMLString)")
+        }
     }
 }
