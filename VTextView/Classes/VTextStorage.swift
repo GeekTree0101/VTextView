@@ -130,9 +130,18 @@ extension VTextStorage {
                                         .replacingOccurrences(of: "\n", with: "\\n")
 
                                     guard let tags = attrs[VTypingManager.managerKey] as? [String],
+                                        let contexts = typingManager?.contexts.filter({ tags.contains($0.key) }),
                                         !filteredText.isEmpty else { return }
-                                    let open = tags.map({ "<\($0)>" }).joined()
-                                    let close = tags.map({ "</\($0)>" }).joined()
+                                    
+                                    let open = contexts.map({ $0.xmlTag })
+                                        .map({ "<\($0)>" })
+                                        .joined()
+                                    
+                                    let close = contexts.map({ $0.xmlTag })
+                                        .reversed()
+                                        .map({ "</\($0)>" })
+                                        .joined()
+                                    
                                     output += [open, filteredText, close].joined()
             })
         

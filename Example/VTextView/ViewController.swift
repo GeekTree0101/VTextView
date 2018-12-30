@@ -119,6 +119,7 @@ extension ViewController: VTypingManagerDelegate {
         
         if isActive {
             context.active.append(key.rawValue)
+            context.inactive.append(TypingScope.normal.rawValue)
         } else {
             context.inactive.append(key.rawValue)
         }
@@ -127,13 +128,13 @@ extension ViewController: VTypingManagerDelegate {
         case .bold:
             if prevActivedKeys.contains(TypingScope.italic.rawValue) {
                 context.active.append(TypingScope.italic.rawValue)
-            } else {
+            } else if !isActive {
                 context.active.append(TypingScope.normal.rawValue)
             }
         case .italic:
             if prevActivedKeys.contains(TypingScope.bold.rawValue) {
                 context.active.append(TypingScope.bold.rawValue)
-            } else {
+            } else if !isActive {
                 context.active.append(TypingScope.normal.rawValue)
             }
         case .heading:
