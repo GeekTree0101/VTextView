@@ -12,7 +12,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     }
     
     internal var status: TypingStatus = .none
-    internal var typingManager: VTypingManager?
+    internal var typingManager: VTextManager?
     
     private var internalAttributedString: NSMutableAttributedString = NSMutableAttributedString()
     private var prevLocation: Int = 0
@@ -23,7 +23,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     internal var currentTypingAttribute: [NSAttributedString.Key: Any] = [:]
     
-    convenience init(typingManager: VTypingManager) {
+    convenience init(typingManager: VTextManager) {
         self.init()
         self.typingManager = typingManager
         self.delegate = self
@@ -112,7 +112,7 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
                 self.attributes(at: textView.selectedRange.location,
                                 effectiveRange: nil)
             
-            if let keys = currentAttributes[VTypingManager.managerKey] as? [String],
+            if let keys = currentAttributes[VTextManager.managerKey] as? [String],
                 let key = keys.first {
                 textView.currentTypingAttribute = currentTypingAttribute
                 self.typingManager?.resetStatus()
@@ -149,7 +149,7 @@ extension VTextStorage {
                                         .attributedSubstring(from: subRange).string
                                         .replacingOccurrences(of: "\n", with: "\\n")
 
-                                    guard let tags = attrs[VTypingManager.managerKey] as? [String],
+                                    guard let tags = attrs[VTextManager.managerKey] as? [String],
                                         let contexts = typingManager?.contexts.filter({ tags.contains($0.key) }),
                                         !filteredText.isEmpty else { return }
                                     

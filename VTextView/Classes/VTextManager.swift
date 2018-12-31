@@ -4,13 +4,13 @@ import RxSwift
 import RxCocoa
 import BonMot
 
-public protocol VTypingManagerDelegate: class {
+public protocol VTextManagerDelegate: class {
     
-    func bindEvents(_ manager: VTypingManager)
-    func attributes(activeKeys: [String]) -> StringStyle
+    func bindEvents(_ manager: VTextManager)
+    func typingAttributes(activeKeys: [String]) -> StringStyle
     func updateStatus(currentKey: String,
                       isActive: Bool,
-                      prevActivedKeys: [String]) -> VTypingManager.StatusManageContext?
+                      prevActivedKeys: [String]) -> VTextManager.StatusManageContext?
     func mutatingAttribute(key: String,
                            attributes: [String: String],
                            currentStyle: StringStyle) -> StringStyle?
@@ -41,7 +41,7 @@ public struct VTypingContext {
     }
 }
 
-extension Reactive where Base: VTypingManager {
+extension Reactive where Base: VTextManager {
     
     public func didTap(_ key: String) -> Binder<Void> {
         return Binder(base) { manager, _ in
@@ -74,7 +74,7 @@ extension Reactive where Base: VTypingManager {
     }
 }
 
-public class VTypingManager: NSObject {
+public class VTextManager: NSObject {
     
     public struct StatusManageContext {
         
@@ -86,9 +86,9 @@ public class VTypingManager: NSObject {
     }
     
     internal static let managerKey: NSAttributedString.Key =
-        .init(rawValue: "VTypingManager.key")
+        .init(rawValue: "VTextManager.key")
     
-    public weak var delegate: VTypingManagerDelegate! {
+    public weak var delegate: VTextManagerDelegate! {
         didSet {
             self.eventDisposeBag = DisposeBag()
             self.delegate?.bindEvents(self)
@@ -120,9 +120,9 @@ public class VTypingManager: NSObject {
     
     public var defaultAttribute: [NSAttributedString.Key: Any]! {
         guard let delegate = self.delegate else {
-            fatalError("Please inherit VTypingManagerDelegate!")
+            fatalError("Please inherit VTextManagerDelegate!")
         }
-        return delegate.attributes(activeKeys: [defaultKey]).attributes
+        return delegate.typingAttributes(activeKeys: [defaultKey]).attributes
     }
     
     public init(_ contexts: [VTypingContext], defaultKey: String) {
@@ -150,7 +150,7 @@ public class VTypingManager: NSObject {
     
     public func didTapTargetKey(_ key: String) {
         guard let delegate = self.delegate else {
-            fatalError("Please inherit VTypingManagerDelegate!")
+            fatalError("Please inherit VTextManagerDelegate!")
         }
         
         guard let targetContext = contexts.filter({ $0.key == key }).first else {
@@ -197,8 +197,8 @@ public class VTypingManager: NSObject {
             .filter({ $0.currentStatusRelay.value == .active })
             .map({ $0.key })
         
-        var currentAttributes = delegate.attributes(activeKeys: currentActiveKeys).attributes
-        currentAttributes[VTypingManager.managerKey] = currentActiveKeys as Any
+        var currentAttributes = delegate.typingAttributes(activeKeys: currentActiveKeys).attributes
+        currentAttributes[VTextManager.managerKey] = currentActiveKeys as Any
         
         if targetContext.isBlockStyle {
             self.blockAttributeRelay.accept(currentAttributes)
@@ -208,7 +208,7 @@ public class VTypingManager: NSObject {
     }
     
     /**
-     Bind UIControl Event with VTypingMAnager
+     Bind UIControl Event with VTextManager
      
      - parameters:
      - controlTarget: UIControl or UIControl subclass

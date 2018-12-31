@@ -23,8 +23,8 @@ class ViewController: UIViewController {
     let controlView = TypingControlView(frame: .zero)
     let disposeBag = DisposeBag()
     
-    lazy var typingManager: VTypingManager = {
-        let manager = VTypingManager([.init(TypingScope.normal.rawValue,
+    lazy var typingManager: VTextManager = {
+        let manager = VTextManager([.init(TypingScope.normal.rawValue,
                                             xmlTag: "p"),
                                       .init(TypingScope.bold.rawValue,
                                             xmlTag: "b"),
@@ -83,7 +83,7 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: VTypingManagerDelegate {
+extension ViewController: VTextManagerDelegate {
     
     func mutatingAttribute(key: String,
                            attributes: [String : String],
@@ -102,7 +102,7 @@ extension ViewController: VTypingManagerDelegate {
         }
     }
     
-    func attributes(activeKeys: [String]) -> StringStyle {
+    func typingAttributes(activeKeys: [String]) -> StringStyle {
         if activeKeys.contains(TypingScope.italic.rawValue),
             activeKeys.contains(TypingScope.bold.rawValue) {
             var emp = Emphasis.init(rawValue: 0)
@@ -139,7 +139,7 @@ extension ViewController: VTypingManagerDelegate {
         }
     }
     
-    func bindEvents(_ manager: VTypingManager) {
+    func bindEvents(_ manager: VTextManager) {
         
         manager.bindControlEvent(controlView.boldControlView,
                                  key: TypingScope.bold.rawValue)
@@ -153,9 +153,9 @@ extension ViewController: VTypingManagerDelegate {
     
     func updateStatus(currentKey: String,
                       isActive: Bool,
-                      prevActivedKeys: [String]) -> VTypingManager.StatusManageContext? {
+                      prevActivedKeys: [String]) -> VTextManager.StatusManageContext? {
         guard let key = TypingScope(rawValue: currentKey) else { return nil }
-        var context = VTypingManager.StatusManageContext()
+        var context = VTextManager.StatusManageContext()
         
         if isActive {
             context.active.append(key.rawValue)

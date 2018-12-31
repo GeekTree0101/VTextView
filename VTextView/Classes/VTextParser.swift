@@ -4,7 +4,7 @@ import BonMot
 
 internal class VTextXMLParser: NSObject {
     
-    private let manager: VTypingManager
+    private let manager: VTextManager
     private var mutableAttributedText: NSMutableAttributedString = .init()
     internal var complateHandler: (NSAttributedString) -> Void
     
@@ -15,7 +15,7 @@ internal class VTextXMLParser: NSObject {
     private var currentContext: VTypingContext?
     
     init(_ xmlString: String,
-         manager: VTypingManager,
+         manager: VTextManager,
          complateHandler: @escaping (NSAttributedString) -> Void) {
         self.manager = manager
         self.complateHandler = complateHandler
@@ -35,8 +35,8 @@ internal class VTextXMLParser: NSObject {
     }
     
     internal func buildXMLStyleRule(_ xmlTag: String, key: String) -> XMLStyleRule {
-        var attrs = manager.delegate.attributes(activeKeys: [key])
-        attrs.add(extraAttributes: [VTypingManager.managerKey: [key]])
+        var attrs = manager.delegate.typingAttributes(activeKeys: [key])
+        attrs.add(extraAttributes: [VTextManager.managerKey: [key]])
         
         return XMLStyleRule.style(xmlTag, attrs)
     }
@@ -45,7 +45,7 @@ internal class VTextXMLParser: NSObject {
 internal struct VXMLStyleRule: XMLStyler {
     
     let rules: [XMLStyleRule]
-    let manager: VTypingManager
+    let manager: VTextManager
     
     public func style(forElement name: String,
                       attributes: [String: String],
