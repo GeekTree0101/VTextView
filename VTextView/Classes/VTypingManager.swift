@@ -11,6 +11,9 @@ public protocol VTypingManagerDelegate: class {
     func updateStatus(currentKey: String,
                       isActive: Bool,
                       prevActivedKeys: [String]) -> VTypingManager.StatusManageContext?
+    func mutatingAttribute(key: String,
+                           attributes: [String: String],
+                           currentStyle: StringStyle) -> StringStyle?
 }
 
 public struct VTypingContext {
@@ -25,15 +28,16 @@ public struct VTypingContext {
     public var currentStatusRelay = BehaviorRelay<Status>(value: .inactive)
     public var xmlTag: String
     public var isBlockStyle: Bool = false
+    public var isTouchEvent: Bool = false
     
-    public init(_ key: String, xmlTag: String, isBlockStyle: Bool) {
-        self.init(key, xmlTag: xmlTag)
-        self.isBlockStyle = isBlockStyle
-    }
-    
-    public init(_ key: String, xmlTag: String) {
+    public init(_ key: String,
+                xmlTag: String,
+                isBlockStyle: Bool = false,
+                isTouchEvent: Bool = false) {
         self.key = key
         self.xmlTag = xmlTag
+        self.isBlockStyle = isBlockStyle
+        self.isTouchEvent = isTouchEvent
     }
 }
 
@@ -241,5 +245,9 @@ public class VTypingManager: NSObject {
     
     public func getXMLTags(_ keys: [String]) -> [String]? {
         return contexts.filter({ keys.contains($0.key) }).map({ $0.xmlTag })
+    }
+    
+    public func getKey(_ xmlTag: String) -> String? {
+        return contexts.filter({ $0.xmlTag == xmlTag }).map({ $0.key }).first
     }
 }

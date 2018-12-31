@@ -14,6 +14,7 @@ class ViewController: UIViewController {
         case italic
         case heading
         case quote
+        case link
     }
     
     // Create VTextView
@@ -23,9 +24,15 @@ class ViewController: UIViewController {
     let disposeBag = DisposeBag()
     
     lazy var typingManager: VTypingManager = {
-        let manager = VTypingManager([.init(TypingScope.normal.rawValue, xmlTag: "p"),
-                                      .init(TypingScope.bold.rawValue, xmlTag: "b"),
-                                      .init(TypingScope.italic.rawValue, xmlTag: "i"),
+        let manager = VTypingManager([.init(TypingScope.normal.rawValue,
+                                            xmlTag: "p"),
+                                      .init(TypingScope.bold.rawValue,
+                                            xmlTag: "b"),
+                                      .init(TypingScope.italic.rawValue,
+                                            xmlTag: "i"),
+                                      .init(TypingScope.link.rawValue,
+                                            xmlTag: "a",
+                                            isTouchEvent: true),
                                       .init(TypingScope.heading.rawValue,
                                             xmlTag: "h2",
                                             isBlockStyle: true),
@@ -78,6 +85,23 @@ class ViewController: UIViewController {
 
 extension ViewController: VTypingManagerDelegate {
     
+    func mutatingAttribute(key: String,
+                           attributes: [String : String],
+                           currentStyle: StringStyle) -> StringStyle? {
+        guard let currentKey = TypingScope(rawValue: key) else { return nil }
+        
+        switch currentKey {
+        case .link:
+            if let urlString = attributes["href"],
+                let url = URL(string: urlString) {
+                return currentStyle.byAdding(.link(url))
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+    
     func attributes(activeKeys: [String]) -> StringStyle {
         if activeKeys.contains(TypingScope.italic.rawValue),
             activeKeys.contains(TypingScope.bold.rawValue) {
@@ -106,6 +130,10 @@ extension ViewController: VTypingManagerDelegate {
         } else if activeKeys.contains(TypingScope.normal.rawValue) {
             return .init([.font(UIFont.systemFont(ofSize: 15)),
                           .color(.black)])
+        } else if activeKeys.contains(TypingScope.link.rawValue) {
+            return .init([.font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black),
+                          .underline(.single, .black)])
         } else {
             return .init()
         }
