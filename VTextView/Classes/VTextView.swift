@@ -19,7 +19,7 @@ open class VTextView: UITextView, UITextViewDelegate {
     
     let disposeBag = DisposeBag()
     
-    public required init(manager: VTypingManager) {
+    public required init(manager: VTextManager) {
         let textContainer = NSTextContainer(size: .zero)
         let layoutManager = NSLayoutManager()
         layoutManager.addTextContainer(textContainer)

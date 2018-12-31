@@ -4,9 +4,9 @@ import BonMot
 
 internal class VTextXMLParser: NSObject {
     
-    private let manager: VTypingManager
+    private let manager: VTextManager
     private var mutableAttributedText: NSMutableAttributedString = .init()
-    public var complateHandler: (NSAttributedString) -> Void
+    internal var complateHandler: (NSAttributedString) -> Void
     
     private var contexts: [VTypingContext] {
         return manager.contexts
@@ -15,7 +15,7 @@ internal class VTextXMLParser: NSObject {
     private var currentContext: VTypingContext?
     
     init(_ xmlString: String,
-         manager: VTypingManager,
+         manager: VTextManager,
          complateHandler: @escaping (NSAttributedString) -> Void) {
         self.manager = manager
         self.complateHandler = complateHandler
@@ -28,17 +28,70 @@ internal class VTextXMLParser: NSObject {
             return self.buildXMLStyleRule(context.xmlTag, key: context.key)
         })
         
-        do {
-            let attrText = try NSAttributedString.composed(ofXML: mutableXMLString, rules: xmlRules)
-            self.complateHandler(attrText)
-        } catch {
-            fatalError("Parse Error: \(mutableXMLString)")
-        }
+        let styleRule = VXMLStyleRule(rules: xmlRules, manager: manager)
+        
+        let attrText = mutableXMLString
+            .styled(with: StringStyle(.xmlStyler(styleRule)))
+        self.complateHandler(attrText)
     }
     
     internal func buildXMLStyleRule(_ xmlTag: String, key: String) -> XMLStyleRule {
-        var attrs = manager.delegate.attributes(activeKeys: [key])
-        attrs.add(extraAttributes: [VTypingManager.managerKey: [key]])
+        var attrs = manager.typingDelegate.typingAttributes(activeKeys: [key])
+        attrs.add(extraAttributes: [VTextManager.managerKey: [key]])
         return XMLStyleRule.style(xmlTag, attrs)
+    }
+}
+
+internal struct VXMLStyleRule: XMLStyler {
+    
+    let rules: [XMLStyleRule]
+    let manager: VTextManager
+    
+    public func style(forElement name: String,
+                      attributes: [String: String],
+                      currentStyle: StringStyle) -> StringStyle? {
+        for rule in rules {
+            switch rule {
+            case let .style(string, style) where string == name:
+                guard let delegate = manager.parserDelegate,
+                    let key = manager.getKey(name),
+                    let mutatedStyle = delegate
+                        .mutatingAttribute(key: key,
+                                           attributes: attributes,
+                                           currentStyle: style) else { return style }
+                return mutatedStyle
+            default:
+                break
+            }
+        }
+        for rule in rules {
+            if case let .styles(namedStyles) = rule {
+                return namedStyles.style(forName: name)
+            }
+        }
+        return nil
+    }
+    
+    public func prefix(forElement name: String,
+                       attributes: [String: String]) -> Composable? {
+        for rule in rules {
+            switch rule {
+            case let .enter(string, composable) where string == name:
+                return composable
+            default: break
+            }
+        }
+        return nil
+    }
+    
+    public func suffix(forElement name: String) -> Composable? {
+        for rule in rules {
+            switch rule {
+            case let .exit(string, composable) where string == name:
+                return composable
+            default: break
+            }
+        }
+        return nil
     }
 }

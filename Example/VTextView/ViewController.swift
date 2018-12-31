@@ -14,18 +14,25 @@ class ViewController: UIViewController {
         case italic
         case heading
         case quote
+        case link
     }
     
     // Create VTextView
-    lazy var textView = VTextView(manager: typingManager)
+    lazy var textView = VTextView(manager: manager)
     
     let controlView = TypingControlView(frame: .zero)
     let disposeBag = DisposeBag()
     
-    lazy var typingManager: VTypingManager = {
-        let manager = VTypingManager([.init(TypingScope.normal.rawValue, xmlTag: "p"),
-                                      .init(TypingScope.bold.rawValue, xmlTag: "b"),
-                                      .init(TypingScope.italic.rawValue, xmlTag: "i"),
+    lazy var manager: VTextManager = {
+        let manager = VTextManager([.init(TypingScope.normal.rawValue,
+                                            xmlTag: "p"),
+                                      .init(TypingScope.bold.rawValue,
+                                            xmlTag: "b"),
+                                      .init(TypingScope.italic.rawValue,
+                                            xmlTag: "i"),
+                                      .init(TypingScope.link.rawValue,
+                                            xmlTag: "a",
+                                            isTouchEvent: true),
                                       .init(TypingScope.heading.rawValue,
                                             xmlTag: "h2",
                                             isBlockStyle: true),
@@ -33,7 +40,8 @@ class ViewController: UIViewController {
                                             xmlTag: "blockquote",
                                             isBlockStyle: true)],
                                      defaultKey: TypingScope.normal.rawValue)
-        manager.delegate = self
+        manager.typingDelegate = self
+        manager.parserDelegate = self
         return manager
     }()
     
@@ -76,9 +84,41 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: VTypingManagerDelegate {
+extension ViewController: VTextParserDelegate {
     
-    func attributes(activeKeys: [String]) -> StringStyle {
+    func customXMLTagAttribute(context: VTypingContext,
+                               attributes: [NSAttributedString.Key : Any]) -> String? {
+        
+        if context.key == TypingScope.link.rawValue,
+            let link = attributes[.link] as? URL {
+            return "href=\"\(link)\""
+        }
+        
+        return nil
+    }
+    
+    
+    func mutatingAttribute(key: String,
+                           attributes: [String : String],
+                           currentStyle: StringStyle) -> StringStyle? {
+        guard let currentKey = TypingScope(rawValue: key) else { return nil }
+        
+        switch currentKey {
+        case .link:
+            if let urlString = attributes["href"],
+                let url = URL(string: urlString) {
+                return currentStyle.byAdding(.link(url))
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+}
+
+extension ViewController: VTextTypingDelegate {
+    
+    func typingAttributes(activeKeys: [String]) -> StringStyle {
         if activeKeys.contains(TypingScope.italic.rawValue),
             activeKeys.contains(TypingScope.bold.rawValue) {
             var emp = Emphasis.init(rawValue: 0)
@@ -106,12 +146,16 @@ extension ViewController: VTypingManagerDelegate {
         } else if activeKeys.contains(TypingScope.normal.rawValue) {
             return .init([.font(UIFont.systemFont(ofSize: 15)),
                           .color(.black)])
+        } else if activeKeys.contains(TypingScope.link.rawValue) {
+            return .init([.font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black),
+                          .underline(.single, .black)])
         } else {
             return .init()
         }
     }
     
-    func bindEvents(_ manager: VTypingManager) {
+    func bindEvents(_ manager: VTextManager) {
         
         manager.bindControlEvent(controlView.boldControlView,
                                  key: TypingScope.bold.rawValue)
@@ -125,9 +169,9 @@ extension ViewController: VTypingManagerDelegate {
     
     func updateStatus(currentKey: String,
                       isActive: Bool,
-                      prevActivedKeys: [String]) -> VTypingManager.StatusManageContext? {
+                      prevActivedKeys: [String]) -> VTextManager.StatusManageContext? {
         guard let key = TypingScope(rawValue: currentKey) else { return nil }
-        var context = VTypingManager.StatusManageContext()
+        var context = VTextManager.StatusManageContext()
         
         if isActive {
             context.active.append(key.rawValue)
