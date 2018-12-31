@@ -112,11 +112,9 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
                 self.attributes(at: textView.selectedRange.location,
                                 effectiveRange: nil)
             
-            if let keys = currentAttributes[VTextManager.managerKey] as? [String],
-                let key = keys.first {
-                textView.currentTypingAttribute = currentTypingAttribute
-                self.typingManager?.resetStatus()
-                self.typingManager?.didTapTargetKey(key)
+            if let keys = currentAttributes[VTextManager.managerKey] as? [String]  {
+                textView.currentTypingAttribute = currentAttributes
+                self.typingManager?.fetchActiveAttribute(keys)
             } else {
                 let key = typingManager?.defaultKey ?? ""
                 let defaultAttributes = typingManager?.defaultAttribute ?? [:]

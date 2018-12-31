@@ -53,12 +53,27 @@ internal struct VXMLStyleRule: XMLStyler {
         for rule in rules {
             switch rule {
             case let .style(string, style) where string == name:
-                guard let delegate = manager.parserDelegate,
-                    let key = manager.getKey(name),
-                    let mutatedStyle = delegate
+                var mutatedStyle: StringStyle
+                
+                guard let key = manager.getKey(name) else { return style }
+                
+                if let delegate = manager.parserDelegate,
+                    let targetStyle = delegate
                         .mutatingAttribute(key: key,
                                            attributes: attributes,
-                                           currentStyle: style) else { return style }
+                                           currentStyle: style) {
+                    mutatedStyle = targetStyle
+                } else {
+                    mutatedStyle = style
+                }
+                
+                // *** Merge topStyle managerKey list with current key ***
+                if var beforeKeys = currentStyle.attributes[VTextManager.managerKey] as? [String],
+                    !beforeKeys.contains(key) {
+                    beforeKeys.append(key)
+                    mutatedStyle.add(extraAttributes: [VTextManager.managerKey: beforeKeys])
+                }
+                
                 return mutatedStyle
             default:
                 break
