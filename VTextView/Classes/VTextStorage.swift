@@ -153,13 +153,19 @@ extension VTextStorage {
                                         let contexts = typingManager?.contexts.filter({ tags.contains($0.key) }),
                                         !filteredText.isEmpty else { return }
                                     
-                                    let open = contexts.map({ $0.xmlTag })
-                                        .map({ "<\($0)>" })
+                                    let open = contexts
+                                        .map({ self.convertToXMLTag($0,
+                                                                    attributes: attrs,
+                                                                    isOpen: true)
+                                        })
                                         .joined()
                                     
-                                    let close = contexts.map({ $0.xmlTag })
+                                    let close = contexts
                                         .reversed()
-                                        .map({ "</\($0)>" })
+                                        .map({ self.convertToXMLTag($0,
+                                                                    attributes: attrs,
+                                                                    isOpen: false)
+                                        })
                                         .joined()
                                     
                                     output += [open, filteredText, close].joined()
@@ -184,5 +190,18 @@ extension VTextStorage {
         _ = VTextXMLParser(string, manager: manager, complateHandler: { attr in
             self.setAttributedString(attr)
         })
+    }
+    
+    private func convertToXMLTag(_ context: VTypingContext,
+                                 attributes: [NSAttributedString.Key: Any],
+                                 isOpen: Bool) -> String {
+        var tags: [String] = [context.xmlTag]
+        if let xmlAttribute: String = typingManager?.parserDelegate
+            .customXMLTagAttribute(context: context,
+                                   attributes: attributes) {
+            tags.append(xmlAttribute)
+        }
+        let xmlTag = tags.joined(separator: " ")
+        return isOpen ? "<\(xmlTag)>": "</\(xmlTag)>"
     }
 }

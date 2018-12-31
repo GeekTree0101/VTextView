@@ -29,15 +29,15 @@ internal class VTextXMLParser: NSObject {
         })
         
         let styleRule = VXMLStyleRule(rules: xmlRules, manager: manager)
+        
         let attrText = mutableXMLString
             .styled(with: StringStyle(.xmlStyler(styleRule)))
         self.complateHandler(attrText)
     }
     
     internal func buildXMLStyleRule(_ xmlTag: String, key: String) -> XMLStyleRule {
-        var attrs = manager.delegate.typingAttributes(activeKeys: [key])
+        var attrs = manager.typingDelegate.typingAttributes(activeKeys: [key])
         attrs.add(extraAttributes: [VTextManager.managerKey: [key]])
-        
         return XMLStyleRule.style(xmlTag, attrs)
     }
 }
@@ -53,8 +53,9 @@ internal struct VXMLStyleRule: XMLStyler {
         for rule in rules {
             switch rule {
             case let .style(string, style) where string == name:
-                guard let key = manager.getKey(name),
-                    let mutatedStyle = manager.delegate?
+                guard let delegate = manager.parserDelegate,
+                    let key = manager.getKey(name),
+                    let mutatedStyle = delegate
                         .mutatingAttribute(key: key,
                                            attributes: attributes,
                                            currentStyle: style) else { return style }

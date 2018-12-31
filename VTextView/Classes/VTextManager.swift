@@ -4,16 +4,23 @@ import RxSwift
 import RxCocoa
 import BonMot
 
-public protocol VTextManagerDelegate: class {
+public protocol VTextTypingDelegate: class {
     
     func bindEvents(_ manager: VTextManager)
     func typingAttributes(activeKeys: [String]) -> StringStyle
     func updateStatus(currentKey: String,
                       isActive: Bool,
                       prevActivedKeys: [String]) -> VTextManager.StatusManageContext?
+}
+
+public protocol VTextParserDelegate: class {
+    
     func mutatingAttribute(key: String,
                            attributes: [String: String],
                            currentStyle: StringStyle) -> StringStyle?
+    
+    func customXMLTagAttribute(context: VTypingContext,
+                               attributes: [NSAttributedString.Key: Any]) -> String?
 }
 
 public struct VTypingContext {
@@ -88,12 +95,14 @@ public class VTextManager: NSObject {
     internal static let managerKey: NSAttributedString.Key =
         .init(rawValue: "VTextManager.key")
     
-    public weak var delegate: VTextManagerDelegate! {
+    public weak var typingDelegate: VTextTypingDelegate! {
         didSet {
             self.eventDisposeBag = DisposeBag()
-            self.delegate?.bindEvents(self)
+            self.typingDelegate?.bindEvents(self)
         }
     }
+    
+    public weak var parserDelegate: VTextParserDelegate!
     
     internal let blockAttributeRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let currentAttributesRelay = PublishRelay<[NSAttributedString.Key: Any]>()
@@ -119,8 +128,8 @@ public class VTextManager: NSObject {
     }
     
     public var defaultAttribute: [NSAttributedString.Key: Any]! {
-        guard let delegate = self.delegate else {
-            fatalError("Please inherit VTextManagerDelegate!")
+        guard let delegate = self.typingDelegate else {
+            fatalError("Please inherit VTextTypingDelegate!")
         }
         return delegate.typingAttributes(activeKeys: [defaultKey]).attributes
     }
@@ -149,8 +158,8 @@ public class VTextManager: NSObject {
     }
     
     public func didTapTargetKey(_ key: String) {
-        guard let delegate = self.delegate else {
-            fatalError("Please inherit VTextManagerDelegate!")
+        guard let delegate = self.typingDelegate else {
+            fatalError("Please inherit VTextTypingDelegate!")
         }
         
         guard let targetContext = contexts.filter({ $0.key == key }).first else {

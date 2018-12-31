@@ -18,12 +18,12 @@ class ViewController: UIViewController {
     }
     
     // Create VTextView
-    lazy var textView = VTextView(manager: typingManager)
+    lazy var textView = VTextView(manager: manager)
     
     let controlView = TypingControlView(frame: .zero)
     let disposeBag = DisposeBag()
     
-    lazy var typingManager: VTextManager = {
+    lazy var manager: VTextManager = {
         let manager = VTextManager([.init(TypingScope.normal.rawValue,
                                             xmlTag: "p"),
                                       .init(TypingScope.bold.rawValue,
@@ -40,7 +40,8 @@ class ViewController: UIViewController {
                                             xmlTag: "blockquote",
                                             isBlockStyle: true)],
                                      defaultKey: TypingScope.normal.rawValue)
-        manager.delegate = self
+        manager.typingDelegate = self
+        manager.parserDelegate = self
         return manager
     }()
     
@@ -83,7 +84,19 @@ class ViewController: UIViewController {
     }
 }
 
-extension ViewController: VTextManagerDelegate {
+extension ViewController: VTextParserDelegate {
+    
+    func customXMLTagAttribute(context: VTypingContext,
+                               attributes: [NSAttributedString.Key : Any]) -> String? {
+        
+        if context.key == TypingScope.link.rawValue,
+            let link = attributes[.link] as? URL {
+            return "href=\"\(link)\""
+        }
+        
+        return nil
+    }
+    
     
     func mutatingAttribute(key: String,
                            attributes: [String : String],
@@ -101,6 +114,9 @@ extension ViewController: VTextManagerDelegate {
             return nil
         }
     }
+}
+
+extension ViewController: VTextTypingDelegate {
     
     func typingAttributes(activeKeys: [String]) -> StringStyle {
         if activeKeys.contains(TypingScope.italic.rawValue),
