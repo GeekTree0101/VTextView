@@ -36,7 +36,7 @@ internal class VTextXMLParser: NSObject {
     }
     
     internal func buildXMLStyleRule(_ xmlTag: String, key: String) -> XMLStyleRule {
-        var attrs = manager.typingDelegate.typingAttributes(activeKeys: [key])
+        var attrs = manager.typingDelegate.typingAttributes(key: key)
         attrs.add(extraAttributes: [VTextManager.managerKey: [key]])
         return XMLStyleRule.style(xmlTag, attrs)
     }
