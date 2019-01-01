@@ -52,7 +52,7 @@ extension Reactive where Base: VTextManager {
     
     public func didTap(_ key: String) -> Binder<Void> {
         return Binder(base) { manager, _ in
-            manager.didTapTargetKey(key)
+            manager.updateCurrentAttribute(key)
         }
     }
     
@@ -140,6 +140,30 @@ public class VTextManager: NSObject {
         super.init()
     }
     
+    public func fetchActiveAttribute(_ keys: [String]) {
+        guard case let defaultFilteredKey = keys.filter({ $0 != defaultKey }),
+            !defaultFilteredKey.isEmpty else {
+                self.resetStatus()
+                return
+        }
+        
+        for context in contexts {
+            if defaultFilteredKey.contains(context.key) {
+                context.currentStatusRelay.accept(.active)
+            } else {
+                context.currentStatusRelay.accept(.inactive)
+            }
+        }
+        
+        let targetKeys = contexts
+            .filter({ $0.currentStatusRelay.value == .inactive })
+            .map({ $0.key })
+        
+        self.activeContextsRelay.accept(.init(defaultFilteredKey))
+        self.inactiveContextsRelay.accept(.init(targetKeys))
+        self.enableContextsRelay.accept(.init(targetKeys))
+    }
+    
     public func resetStatus() {
         for context in contexts {
             if context.key == self.defaultKey {
@@ -157,7 +181,7 @@ public class VTextManager: NSObject {
         self.enableContextsRelay.accept(.init(targetKeys))
     }
     
-    public func didTapTargetKey(_ key: String) {
+    public func updateCurrentAttribute(_ key: String) {
         guard let delegate = self.typingDelegate else {
             fatalError("Please inherit VTextTypingDelegate!")
         }
