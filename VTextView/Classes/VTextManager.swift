@@ -143,8 +143,7 @@ public class VTextManager: NSObject {
     public func fetchActiveAttribute(_ keys: [String]) -> [NSAttributedString.Key: Any] {
         guard case let defaultFilteredKey = keys.filter({ $0 != defaultKey }),
             !defaultFilteredKey.isEmpty else {
-                self.resetStatus()
-                return self.defaultAttribute
+                return self.resetStatus()
         }
         
         for context in contexts {
