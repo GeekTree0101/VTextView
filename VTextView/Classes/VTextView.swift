@@ -17,6 +17,7 @@ open class VTextView: UITextView, UITextViewDelegate {
         }
     }
     
+    public var isEnableTouchEvent: Bool = false
     let disposeBag = DisposeBag()
     
     public required init(manager: VTextManager) {
@@ -27,7 +28,7 @@ open class VTextView: UITextView, UITextViewDelegate {
         textStorage.addLayoutManager(layoutManager)
         super.init(frame: .zero, textContainer: textContainer)
         super.delegate = self
-        self.autocorrectionType = .no
+        self.isEnableTouchEvent = !self.isEditable
         
         manager.currentAttributesRelay.observeOn(MainScheduler.instance)
             .subscribe(onNext: { [weak self] attr in
