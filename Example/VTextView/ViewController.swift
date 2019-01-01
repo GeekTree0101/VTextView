@@ -42,6 +42,7 @@ class ViewController: UIViewController {
                                      defaultKey: TypingScope.normal.rawValue)
         manager.typingDelegate = self
         manager.parserDelegate = self
+        manager.accessoryDelegate = self
         return manager
     }()
     
@@ -81,6 +82,73 @@ class ViewController: UIViewController {
         controlView.dismissControlView.rx.tap.subscribe(onNext: { [weak self] _ in
             _ = self?.textView.resignFirstResponder()
         }).disposed(by: disposeBag)
+    }
+}
+
+extension ViewController: VTextAccessoryDelegate {
+    
+    enum AccessoryScope: String {
+        
+        case userTag = "@(\\w*[0-9A-Za-z])"
+        case hashTag = "#(\\w*[0-9A-Za-zㄱ-ㅎ가-힣])"
+        
+        var regex: NSRegularExpression {
+            return try! NSRegularExpression(pattern: self.rawValue, options: [])
+        }
+        
+        var style: StringStyle? {
+            switch self {
+            case .userTag:
+                return .init([.color(UIColor.init(red: 0.2, green: 0.7, blue: 0.2, alpha: 1.0))])
+            case .hashTag:
+                return .init([.color(UIColor.init(red: 0.2, green: 0.3, blue: 0.7, alpha: 1.0))])
+            }
+        }
+    }
+    
+    func accessoryWithAttribute() -> [NSRegularExpression : StringStyle?] {
+        return [AccessoryScope.userTag.regex: AccessoryScope.userTag.style,
+                AccessoryScope.hashTag.regex: AccessoryScope.hashTag.style]
+    }
+    
+    func handleTouchEvent(_ target: NSRegularExpression, value: Any) {
+        guard let target = AccessoryScope(rawValue: target.pattern) else { return }
+        
+        switch target {
+        case .userTag:
+            guard let username = value as? String else {
+                return
+            }
+            let toast = UIAlertController(title: "You did tap username: \(username)",
+                message: nil,
+                preferredStyle: .alert)
+            toast.addAction(.init(title: "OK", style: .cancel, handler: nil))
+            self.present(toast, animated: true, completion: nil)
+        case .hashTag:
+            guard let tag = value as? String else {
+                return
+            }
+            let toast = UIAlertController(title: "You did tap hashTag: \(tag)",
+                message: nil,
+                preferredStyle: .alert)
+            toast.addAction(.init(title: "OK", style: .cancel, handler: nil))
+            self.present(toast, animated: true, completion: nil)
+        }
+    }
+    
+    func detectLength(_ target: NSRegularExpression) -> Int? {
+        guard let target = AccessoryScope(rawValue: target.pattern) else { return nil }
+        
+        switch target {
+        case .userTag:
+            return 15 // username maxium length is 15
+        case .hashTag:
+            return 10 // hashTag maxium length is 10
+        }
+    }
+    
+    func handleLink(_ url: URL) {
+        UIApplication.shared.openURL(url)
     }
 }
 

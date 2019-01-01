@@ -19,9 +19,16 @@ public protocol VTextParserDelegate: class {
     func mutatingAttribute(key: String,
                            attributes: [String: String],
                            currentStyle: StringStyle) -> StringStyle?
-    
     func customXMLTagAttribute(context: VTypingContext,
                                attributes: [NSAttributedString.Key: Any]) -> String?
+}
+
+public protocol VTextAccessoryDelegate: class {
+    
+    func accessoryWithAttribute() -> [NSRegularExpression: StringStyle?]
+    func detectLength(_ target: NSRegularExpression) -> Int?
+    func handleTouchEvent(_ target: NSRegularExpression, value: Any)
+    func handleLink(_ url: URL)
 }
 
 public struct VTypingContext {
@@ -95,6 +102,7 @@ public class VTextManager: NSObject {
     }
     
     public weak var parserDelegate: VTextParserDelegate!
+    public weak var accessoryDelegate: VTextAccessoryDelegate!
     
     internal let blockAttributeRelay = PublishRelay<[NSAttributedString.Key: Any]>()
     internal let currentAttributesRelay = PublishRelay<[NSAttributedString.Key: Any]>()
@@ -132,11 +140,11 @@ public class VTextManager: NSObject {
         super.init()
     }
     
-    public func fetchActiveAttribute(_ keys: [String]) {
+    public func fetchActiveAttribute(_ keys: [String]) -> [NSAttributedString.Key: Any] {
         guard case let defaultFilteredKey = keys.filter({ $0 != defaultKey }),
             !defaultFilteredKey.isEmpty else {
                 self.resetStatus()
-                return
+                return self.defaultAttribute
         }
         
         for context in contexts {
@@ -154,9 +162,22 @@ public class VTextManager: NSObject {
         self.activeContextsRelay.accept(.init(defaultFilteredKey))
         self.inactiveContextsRelay.accept(.init(targetKeys))
         self.enableContextsRelay.accept(.init(targetKeys))
+        
+        guard let delegate = self.typingDelegate else {
+            fatalError("Please inherit VTextTypingDelegate!")
+        }
+        
+        let typipngKeyDict: [NSAttributedString.Key: Any] =
+            [VTextManager.managerKey: defaultFilteredKey as Any]
+        let initialStyle = StringStyle([.extraAttributes(typipngKeyDict)])
+        return defaultFilteredKey
+            .map({ delegate.typingAttributes(key: $0) })
+            .reduce(initialStyle, { result, item -> StringStyle in
+                return result.byAdding(stringStyle: item)
+            }).attributes
     }
     
-    public func resetStatus() {
+    public func resetStatus() -> [NSAttributedString.Key: Any] {
         for context in contexts {
             if context.key == self.defaultKey {
                 context.currentStatusRelay.accept(.active)
@@ -171,6 +192,8 @@ public class VTextManager: NSObject {
         self.activeContextsRelay.accept(.init([defaultKey]))
         self.inactiveContextsRelay.accept(.init(targetKeys))
         self.enableContextsRelay.accept(.init(targetKeys))
+        
+        return self.defaultAttribute
     }
     
     public func updateCurrentAttribute(_ key: String) {

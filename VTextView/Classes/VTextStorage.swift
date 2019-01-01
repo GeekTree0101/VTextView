@@ -59,6 +59,63 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
         self.endEditing()
     }
     
+    override func fixAttributes(in range: NSRange) {
+        self.replaceAccessoryAttributeIfNeed(range)
+        super.fixAttributes(in: range)
+    }
+    
+    private func replaceAccessoryAttributeIfNeed(_ range: NSRange) {
+        
+        guard let attrs = self.typingManager?.accessoryDelegate?.accessoryWithAttribute(),
+            !attrs.isEmpty else {
+                return
+        }
+        
+        for attr in attrs {
+            
+            let targetRange: NSRange
+            
+            switch status {
+            case .typing:
+                let detectLength: Int
+                if range.length > 1 {
+                    detectLength = range.length
+                } else {
+                    detectLength =
+                        self.typingManager?
+                            .accessoryDelegate?
+                            .detectLength(attr.key) ?? 1
+                }
+                
+                targetRange = NSRange(location: max(0, range.location - detectLength),
+                                      length: range.length + detectLength)
+            case .install:
+                targetRange = range
+            default:
+                return
+            }
+            
+            let matchs = attr.key.matches(in: self.internalAttributedString.string,
+                                          options: [],
+                                          range: targetRange)
+            
+            for match in matchs {
+                let matchRange = match.range
+                let str = self.internalAttributedString.string
+                let start = str.index(str.startIndex, offsetBy: matchRange.location)
+                let end = str.index(str.startIndex, offsetBy: matchRange.location + matchRange.length)
+                let range = start ..< end
+                
+                self.internalAttributedString.addAttribute(NSAttributedString.Key(attr.key.pattern),
+                                                           value: str[range] as Any,
+                                                           range: matchRange)
+                if let attributes = attr.value?.attributes {
+                    self.internalAttributedString.addAttributes(attributes, range: matchRange)
+                }
+            }
+        }
+    }
+    
     public func replaceAttributesIfNeeds(_ textView: UITextView) {
         guard textView.selectedRange.length > 1 else { return }
         self.status = .install
@@ -105,26 +162,57 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
     
     internal func updateCurrentLocationAttributesIfNeeds(_ textView: VTextView) {
         
+        self.triggerTouchEventIfNeeds(textView)
+        
         if textView.selectedRange.length < 1,
-            abs(textView.selectedRange.location - self.prevLocation) > 1 {
+            self.isFlyToTargetLocationWithoutTyping(textView) {
             
             let currentAttributes =
                 self.attributes(at: max(0, textView.selectedRange.location - 1),
                                 effectiveRange: nil)
             
             if let keys = currentAttributes[VTextManager.managerKey] as? [String]  {
-                textView.currentTypingAttribute = currentAttributes
-                self.typingManager?.fetchActiveAttribute(keys)
+                textView.currentTypingAttribute =
+                    self.typingManager?.fetchActiveAttribute(keys) ?? [:]
             } else {
-                let key = typingManager?.defaultKey ?? ""
-                let defaultAttributes = typingManager?.defaultAttribute ?? [:]
-                textView.currentTypingAttribute = defaultAttributes
-                self.typingManager?.resetStatus()
-                self.typingManager?.updateCurrentAttribute(key)
+                textView.currentTypingAttribute =
+                    self.typingManager?.resetStatus() ?? [:]
+                self.typingManager?.updateCurrentAttribute(typingManager?.defaultKey ?? "")
             }
         }
         
         self.prevLocation = textView.selectedRange.location
+    }
+    
+    internal func triggerTouchEventIfNeeds(_ textView: VTextView) {
+        guard self.isFlyToTargetLocationWithoutTyping(textView),
+            textView.selectedRange.length < 1,
+            let attrs = self.typingManager?
+            .accessoryDelegate
+            .accessoryWithAttribute(),
+            !attrs.isEmpty else { return }
+        
+        let currentAttributes =
+            self.attributes(at: max(0, textView.selectedRange.location - 1),
+                            effectiveRange: nil)
+        
+        if let url = currentAttributes[NSAttributedString.Key.link] as? URL {
+            self.typingManager?.accessoryDelegate.handleLink(url)
+            return
+        }
+        
+        for attr in attrs {
+            let key = NSAttributedString.Key(attr.key.pattern)
+            if let value = currentAttributes[key] {
+                self.typingManager?.accessoryDelegate
+                    .handleTouchEvent(attr.key, value: value)
+                return
+            }
+        }
+    }
+    
+    private func isFlyToTargetLocationWithoutTyping(_ textView: VTextView) -> Bool {
+        return abs(textView.selectedRange.location - self.prevLocation) > 1
     }
     
     public func paragraphStyleRange(_ textView: VTextView) -> NSRange {
