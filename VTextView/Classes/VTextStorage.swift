@@ -136,51 +136,10 @@ final internal class VTextStorage: NSTextStorage, NSTextStorageDelegate {
 extension VTextStorage {
     
     internal func parseToXML(packageTag: String?) -> String {
-        let range = NSRange.init(location: 0, length: self.internalAttributedString.length)
-        var output: String = ""
-        
-        self.internalAttributedString
-            .enumerateAttributes(in: range,
-                                 options: [], using: { attrs, subRange, _ in
-                                    
-                                    let filteredText = self.internalAttributedString
-                                        .attributedSubstring(from: subRange).string
-                                        .replacingOccurrences(of: "\n", with: "\\n")
-
-                                    guard let tags = attrs[VTextManager.managerKey] as? [String],
-                                        let contexts = typingManager?.contexts.filter({ tags.contains($0.key) }),
-                                        !filteredText.isEmpty else { return }
-                                    
-                                    let open = contexts
-                                        .map({ self.convertToXMLTag($0,
-                                                                    attributes: attrs,
-                                                                    isOpen: true)
-                                        })
-                                        .joined()
-                                    
-                                    let close = contexts
-                                        .reversed()
-                                        .map({ self.convertToXMLTag($0,
-                                                                    attributes: attrs,
-                                                                    isOpen: false)
-                                        })
-                                        .joined()
-                                    
-                                    output += [open, filteredText, close].joined()
-            })
-        
-        // combined char must be squeeze about </tag><tag> due to blank attribute char
-        let squeezTargetTags: [String] =
-            self.typingManager?.contexts.map({ "</\($0.xmlTag)><\($0.xmlTag)>" }) ?? []
-        for targetTag in squeezTargetTags {
-            output = output.replacingOccurrences(of: targetTag, with: "")
-        }
-        
-        if let packageTag = packageTag {
-            return "<\(packageTag)>" + output + "</\(packageTag)>"
-        } else {
-            return output
-        }
+        guard let manager = typingManager else { return "" }
+        return VTextXMLBuilder.shared.parseToXML(typingManager: manager,
+                                                 internalAttributedString: internalAttributedString,
+                                                 packageTag: packageTag)
     }
     
     internal func xmlToStorage(_ string: String) {
@@ -188,18 +147,5 @@ extension VTextStorage {
         _ = VTextXMLParser(string, manager: manager, complateHandler: { attr in
             self.setAttributedString(attr)
         })
-    }
-    
-    private func convertToXMLTag(_ context: VTypingContext,
-                                 attributes: [NSAttributedString.Key: Any],
-                                 isOpen: Bool) -> String {
-        var tags: [String] = [context.xmlTag]
-        if let xmlAttribute: String = typingManager?.parserDelegate
-            .customXMLTagAttribute(context: context,
-                                   attributes: attributes) {
-            tags.append(xmlAttribute)
-        }
-        let xmlTag = tags.joined(separator: " ")
-        return isOpen ? "<\(xmlTag)>": "</\(xmlTag)>"
     }
 }
