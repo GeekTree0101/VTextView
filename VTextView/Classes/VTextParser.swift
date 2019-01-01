@@ -20,16 +20,11 @@ internal class VTextXMLParser: NSObject {
         self.manager = manager
         self.complateHandler = complateHandler
         super.init()
-        
         let mutableXMLString: String = xmlString.replacingOccurrences(of: "\\n", with: "\n")
-        
-        // build rules
         let xmlRules = manager.contexts.map({ context -> XMLStyleRule in
             return self.buildXMLStyleRule(context.xmlTag, key: context.key)
         })
-        
         let styleRule = VXMLStyleRule(rules: xmlRules, manager: manager)
-        
         let attrText = mutableXMLString
             .styled(with: StringStyle(.xmlStyler(styleRule)))
         self.complateHandler(attrText)
@@ -54,9 +49,7 @@ internal struct VXMLStyleRule: XMLStyler {
             switch rule {
             case let .style(string, style) where string == name:
                 var mutatedStyle: StringStyle
-                
                 guard let key = manager.getKey(name) else { return style }
-                
                 if let delegate = manager.parserDelegate,
                     let targetStyle = delegate
                         .mutatingAttribute(key: key,
