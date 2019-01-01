@@ -68,10 +68,11 @@ internal struct VXMLStyleRule: XMLStyler {
                 }
                 
                 // *** Merge topStyle managerKey list with current key ***
-                if var beforeKeys = currentStyle.attributes[VTextManager.managerKey] as? [String],
-                    !beforeKeys.contains(key) {
-                    beforeKeys.append(key)
-                    mutatedStyle.add(extraAttributes: [VTextManager.managerKey: beforeKeys])
+                if let beforeKeys = currentStyle.attributes[VTextManager.managerKey] as? [String],
+                    case var defaultFilteredKeys = beforeKeys.filter({ $0 != manager.defaultKey }),
+                    !defaultFilteredKeys.contains(key) {
+                    defaultFilteredKeys.append(key)
+                    mutatedStyle.add(extraAttributes: [VTextManager.managerKey: defaultFilteredKeys])
                 }
                 
                 return mutatedStyle

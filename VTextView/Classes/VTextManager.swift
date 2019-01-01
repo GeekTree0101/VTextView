@@ -52,7 +52,7 @@ extension Reactive where Base: VTextManager {
     
     public func didTap(_ key: String) -> Binder<Void> {
         return Binder(base) { manager, _ in
-            manager.didTapTargetKey(key)
+            manager.updateCurrentAttribute(key)
         }
     }
     
@@ -181,7 +181,7 @@ public class VTextManager: NSObject {
         self.enableContextsRelay.accept(.init(targetKeys))
     }
     
-    public func didTapTargetKey(_ key: String) {
+    public func updateCurrentAttribute(_ key: String) {
         guard let delegate = self.typingDelegate else {
             fatalError("Please inherit VTextTypingDelegate!")
         }
