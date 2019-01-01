@@ -205,7 +205,8 @@ extension VTextStorage {
     }
     
     internal func triggerTouchEventIfNeeds(_ textView: VTextView) {
-        guard self.isFlyToTargetLocationWithoutTyping(textView),
+        guard textView.isEnableTouchEvent,
+            self.isFlyToTargetLocationWithoutTyping(textView),
             textView.selectedRange.length < 1,
             let attrs = self.typingManager?
                 .accessoryDelegate
