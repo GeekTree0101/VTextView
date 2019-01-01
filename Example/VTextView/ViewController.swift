@@ -118,45 +118,40 @@ extension ViewController: VTextParserDelegate {
 
 extension ViewController: VTextTypingDelegate {
     
-    func typingAttributes(activeKeys: [String]) -> StringStyle {
-        if activeKeys.contains(TypingScope.italic.rawValue),
-            activeKeys.contains(TypingScope.bold.rawValue) {
-            var emp = Emphasis.init(rawValue: 0)
-            emp.insert(.italic)
-            emp.insert(.bold)
-            return .init([.emphasis(emp),
-                          .font(UIFont.systemFont(ofSize: 15)),
+    func typingAttributes(key: String) -> StringStyle {
+        guard let scope = TypingScope.init(rawValue: key) else {
+            return .init([.font(UIFont.systemFont(ofSize: 15)),
                           .color(.black)])
-        } else if activeKeys.contains(TypingScope.italic.rawValue) {
-            return .init([.emphasis(.italic),
-                          .font(UIFont.systemFont(ofSize: 15)),
-                          .color(.black)])
-        } else if activeKeys.contains(TypingScope.bold.rawValue) {
+        }
+        
+        switch scope {
+        case .bold:
             return .init([.emphasis(.bold),
                           .font(UIFont.systemFont(ofSize: 15)),
                           .color(.black)])
-        } else if activeKeys.contains(TypingScope.heading.rawValue) {
+        case .italic:
+            return .init([.emphasis(.italic),
+                          .font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
+        case .heading:
             return .init([.font(UIFont.systemFont(ofSize: 30, weight: .medium)),
                           .color(.black)])
-        } else if activeKeys.contains(TypingScope.quote.rawValue) {
+        case .quote:
             return .init([.font(UIFont.systemFont(ofSize: 20)),
                           .color(.gray),
                           .firstLineHeadIndent(19.0),
                           .headIndent(19.0)])
-        } else if activeKeys.contains(TypingScope.normal.rawValue) {
-            return .init([.font(UIFont.systemFont(ofSize: 15)),
-                          .color(.black)])
-        } else if activeKeys.contains(TypingScope.link.rawValue) {
+        case .link:
             return .init([.font(UIFont.systemFont(ofSize: 15)),
                           .color(.black),
                           .underline(.single, .black)])
-        } else {
-            return .init()
+        case .normal:
+            return .init([.font(UIFont.systemFont(ofSize: 15)),
+                          .color(.black)])
         }
     }
     
     func bindEvents(_ manager: VTextManager) {
-        
         manager.bindControlEvent(controlView.boldControlView,
                                  key: TypingScope.bold.rawValue)
         manager.bindControlEvent(controlView.italicControlView,

@@ -7,7 +7,7 @@ import BonMot
 public protocol VTextTypingDelegate: class {
     
     func bindEvents(_ manager: VTextManager)
-    func typingAttributes(activeKeys: [String]) -> StringStyle
+    func typingAttributes(key: String) -> StringStyle
     func updateStatus(currentKey: String,
                       isActive: Bool,
                       prevActivedKeys: [String]) -> VTextManager.StatusManageContext?
@@ -131,7 +131,7 @@ public class VTextManager: NSObject {
         guard let delegate = self.typingDelegate else {
             fatalError("Please inherit VTextTypingDelegate!")
         }
-        return delegate.typingAttributes(activeKeys: [defaultKey]).attributes
+        return delegate.typingAttributes(key: defaultKey).attributes
     }
     
     public init(_ contexts: [VTypingContext], defaultKey: String) {
@@ -230,8 +230,15 @@ public class VTextManager: NSObject {
             .filter({ $0.currentStatusRelay.value == .active })
             .map({ $0.key })
         
-        var currentAttributes = delegate.typingAttributes(activeKeys: currentActiveKeys).attributes
-        currentAttributes[VTextManager.managerKey] = currentActiveKeys as Any
+        let typipngKeyDict: [NSAttributedString.Key: Any] =
+            [VTextManager.managerKey: currentActiveKeys as Any]
+        let initialStyle = StringStyle([.extraAttributes(typipngKeyDict)])
+        
+        let currentAttributes = currentActiveKeys
+            .map({ delegate.typingAttributes(key: $0) })
+            .reduce(initialStyle, { result, item -> StringStyle in
+                return result.byAdding(stringStyle: item)
+            }).attributes
         
         if targetContext.isBlockStyle {
             self.blockAttributeRelay.accept(currentAttributes)
