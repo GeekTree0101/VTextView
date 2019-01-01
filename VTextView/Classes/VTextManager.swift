@@ -8,9 +8,10 @@ public protocol VTextTypingDelegate: class {
     
     func bindEvents(_ manager: VTextManager)
     func typingAttributes(key: String) -> StringStyle
-    func updateStatus(currentKey: String,
-                      isActive: Bool,
-                      prevActivedKeys: [String]) -> VTextManager.StatusManageContext?
+    func enableKeys(_ inActiveKey: String) -> [String]?
+    func disableKeys(_ activeKey: String) -> [String]?
+    func inactiveKeys(_ activeKey: String) -> [String]?
+    func activeKeys(_ inactiveKey: String) -> [String]?
 }
 
 public protocol VTextParserDelegate: class {
@@ -82,15 +83,6 @@ extension Reactive where Base: VTextManager {
 }
 
 public class VTextManager: NSObject {
-    
-    public struct StatusManageContext {
-        
-        public var active: [String] = []
-        public var inactive: [String] = []
-        public var disable: [String] = []
-        
-        public init() { }
-    }
     
     internal static let managerKey: NSAttributedString.Key =
         .init(rawValue: "VTextManager.key")
@@ -201,30 +193,52 @@ public class VTextManager: NSObject {
             return // ignore
         }
         
-        let prevActivedKeys = contexts
+        var activeKeys = contexts
             .filter({ $0.key != key })
             .filter({ $0.currentStatusRelay.value == .active })
             .map({ $0.key })
         
-        guard let manageContext =
-            delegate.updateStatus(currentKey: key,
-                                  isActive: isActive,
-                                  prevActivedKeys: prevActivedKeys) else { return }
+        var inactiveKeys: [String] = []
+        var disableKeys: [String] = []
         
+        if isActive {
+            disableKeys.append(contentsOf: self.typingDelegate.disableKeys(key) ?? [])
+            activeKeys.append(key)
+            inactiveKeys.append(contentsOf: self.typingDelegate.inactiveKeys(key) ?? [])
+        } else {
+            inactiveKeys.append(contentsOf: self.typingDelegate.enableKeys(key) ?? [])
+            inactiveKeys.append(key)
+            activeKeys.append(contentsOf: self.typingDelegate.activeKeys(key) ?? [])
+        }
+        
+        // safe manage keys filter
+        activeKeys = activeKeys
+            .filter({ !inactiveKeys.contains($0) })
+            .filter({ !disableKeys.contains($0) })
+        
+        inactiveKeys = inactiveKeys
+            .filter({ !disableKeys.contains($0) })
+        
+        // exception
+        if activeKeys.isEmpty {
+            activeKeys.append(defaultKey)
+        }
+        
+        // apply status on context
         for context in contexts {
-            if manageContext.active.contains(context.key) {
+            if activeKeys.contains(context.key) {
                 context.currentStatusRelay.accept(.active)
-            } else if manageContext.inactive.contains(context.key) {
+            } else if inactiveKeys.contains(context.key) {
                 context.currentStatusRelay.accept(.inactive)
-            } else if manageContext.disable.contains(context.key) {
+            } else if disableKeys.contains(context.key) {
                 context.currentStatusRelay.accept(.disable)
             }
         }
         
-        self.activeContextsRelay.accept(.init(manageContext.active))
-        self.inactiveContextsRelay.accept(.init(manageContext.inactive))
-        self.disableContextsRelay.accept(.init(manageContext.disable))
-        self.enableContextsRelay.accept(.init(manageContext.inactive))
+        self.activeContextsRelay.accept(.init(activeKeys))
+        self.inactiveContextsRelay.accept(.init(inactiveKeys))
+        self.disableContextsRelay.accept(.init(disableKeys))
+        self.enableContextsRelay.accept(.init(inactiveKeys))
         
         let currentActiveKeys = contexts
             .filter({ $0.currentStatusRelay.value == .active })
@@ -277,6 +291,7 @@ public class VTextManager: NSObject {
         self.rx.isDisable(key)
             .bind(to: target.rx.isEnabled)
             .disposed(by: eventDisposeBag)
+        
     }
     
     public func getXMLTag(_ key: String) -> String? {

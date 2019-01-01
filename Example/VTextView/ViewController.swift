@@ -162,62 +162,47 @@ extension ViewController: VTextTypingDelegate {
                                  key: TypingScope.quote.rawValue)
     }
     
-    func updateStatus(currentKey: String,
-                      isActive: Bool,
-                      prevActivedKeys: [String]) -> VTextManager.StatusManageContext? {
-        guard let key = TypingScope(rawValue: currentKey) else { return nil }
-        var context = VTextManager.StatusManageContext()
-        
-        if isActive {
-            context.active.append(key.rawValue)
-            context.inactive.append(TypingScope.normal.rawValue)
-        } else {
-            context.inactive.append(key.rawValue)
-        }
+    func enableKeys(_ inActiveKey: String) -> [String]? {
+        guard let key = TypingScope(rawValue: inActiveKey) else { return nil }
         
         switch key {
-        case .bold:
-            if prevActivedKeys.contains(TypingScope.italic.rawValue) {
-                context.active.append(TypingScope.italic.rawValue)
-            } else if !isActive {
-                context.active.append(TypingScope.normal.rawValue)
-            }
-        case .italic:
-            if prevActivedKeys.contains(TypingScope.bold.rawValue) {
-                context.active.append(TypingScope.bold.rawValue)
-            } else if !isActive {
-                context.active.append(TypingScope.normal.rawValue)
-            }
-        case .heading:
-            if isActive {
-                context.disable.append(contentsOf: [TypingScope.bold.rawValue,
-                                                    TypingScope.italic.rawValue])
-                context.inactive.append(TypingScope.quote.rawValue)
-            } else {
-                context.inactive.append(contentsOf: [TypingScope.bold.rawValue,
-                                                     TypingScope.italic.rawValue])
-                context.active.append(TypingScope.normal.rawValue)
-            }
-        case .quote:
-            if isActive {
-                context.disable.append(contentsOf: [TypingScope.bold.rawValue,
-                                                    TypingScope.italic.rawValue])
-                context.inactive.append(TypingScope.heading.rawValue)
-            } else {
-                context.inactive.append(contentsOf: [TypingScope.bold.rawValue,
-                                                     TypingScope.italic.rawValue])
-                context.active.append(TypingScope.normal.rawValue)
-            }
+        case .heading, .quote:
+            return [TypingScope.bold.rawValue,
+                    TypingScope.italic.rawValue,
+                    TypingScope.normal.rawValue]
         default:
-            context.inactive.append(contentsOf: [TypingScope.heading.rawValue,
-                                                 TypingScope.quote.rawValue,
-                                                 TypingScope.bold.rawValue,
-                                                 TypingScope.italic.rawValue])
-            context.active = [TypingScope.normal.rawValue]
-            return context
+            return nil
         }
+    }
+    
+    func disableKeys(_ activeKey: String) -> [String]? {
+        guard let key = TypingScope(rawValue: activeKey) else { return nil }
         
-        return context
+        switch key {
+        case .heading, .quote:
+            return [TypingScope.bold.rawValue,
+                    TypingScope.italic.rawValue,
+                    TypingScope.normal.rawValue]
+        default:
+            return nil
+        }
+    }
+    
+    func inactiveKeys(_ activeKey: String) -> [String]? {
+        guard let key = TypingScope(rawValue: activeKey) else { return nil }
+        
+        switch key {
+        case .heading:
+            return [TypingScope.quote.rawValue]
+        case .quote:
+            return [TypingScope.heading.rawValue]
+        default:
+            return nil
+        }
+    }
+    
+    func activeKeys(_ inactiveKey: String) -> [String]? {
+        return nil
     }
 }
 

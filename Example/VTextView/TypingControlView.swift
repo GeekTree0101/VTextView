@@ -9,7 +9,7 @@ class TypingControlView: UIView {
         button.setTitle("B", for: .normal)
         button.setTitle("B", for: .selected)
         button.setTitleColor(UIColor.lightGray, for: .disabled)
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
         button.setTitleColor(UIColor.blue, for: .selected)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 25.0).bold()
         button.backgroundColor = .clear
@@ -25,7 +25,7 @@ class TypingControlView: UIView {
         button.setTitle("i", for: .selected)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 25.0).boldItalics()
         button.setTitleColor(UIColor.lightGray, for: .disabled)
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
         button.setTitleColor(UIColor.blue, for: .selected)
         
         button.clipsToBounds = true
@@ -39,7 +39,7 @@ class TypingControlView: UIView {
         button.setTitle("H", for: .selected)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 25.0).bold()
         button.setTitleColor(UIColor.lightGray, for: .disabled)
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
         button.setTitleColor(UIColor.blue, for: .selected)
         button.backgroundColor = .clear
         
@@ -54,7 +54,7 @@ class TypingControlView: UIView {
         button.setTitle("Q", for: .selected)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 25.0).bold()
         button.setTitleColor(UIColor.lightGray, for: .disabled)
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
         button.setTitleColor(UIColor.blue, for: .selected)
         button.backgroundColor = .clear
         
@@ -66,7 +66,7 @@ class TypingControlView: UIView {
     lazy var dismissControlView: UIButton = {
         let button = UIButton.init(type: UIButton.ButtonType.custom)
         button.setTitle("X", for: .normal)
-        button.setTitleColor(UIColor.gray, for: .normal)
+        button.setTitleColor(UIColor.darkGray, for: .normal)
         button.titleLabel?.font = UIFont.systemFont(ofSize: 25.0).bold()
         
         button.clipsToBounds = true
