@@ -80,7 +80,7 @@ class ViewController: UIViewController {
     private func initEvent() {
         
         controlView.dismissControlView.rx.tap.subscribe(onNext: { [weak self] _ in
-            _ = self?.textView.resignFirstResponder()
+            _ = self?.textView.endEditWithDisableControl()
         }).disposed(by: disposeBag)
     }
 }
